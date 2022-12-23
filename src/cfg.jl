@@ -14,6 +14,37 @@ struct ContextFreeGrammar <: Grammar
 end
 
 """
+Function for converting an `Expr` to a `ContextFreeGrammar`. 
+If the expression is hardcoded, you should use the `@cfgrammar` macro.
+Only expressions in the correct format can be converted.
+"""
+function expr2cfgrammar(ex::Expr)::ContextFreeGrammar
+	rules = Any[]
+	types = Symbol[]
+	bytype = Dict{Symbol,Vector{Int}}()
+	for e ∈ ex.args
+		if isa(e, Expr)
+			if e.head == :(=)
+				s = e.args[1] 		# name of return type
+				rule = e.args[2] 	# expression?
+				rvec = Any[]
+				_parse_rule!(rvec, rule)
+				for r ∈ rvec
+					push!(rules, r)
+					push!(types, s)
+					bytype[s] = push!(get(bytype, s, Int[]), length(rules))
+				end
+			end
+		end
+	end
+	alltypes = collect(keys(bytype))
+	is_terminal = [isterminal(rule, alltypes) for rule ∈ rules]
+	is_eval = [iseval(rule) for rule ∈ rules]
+	childtypes = [get_childtypes(rule, alltypes) for rule ∈ rules]
+	return ContextFreeGrammar(rules, types, is_terminal, is_eval, bytype, childtypes)
+end
+
+"""
 @cfgrammar
 Define a grammar and return it as a Grammar. For example:
 ```julia-repl
@@ -25,29 +56,7 @@ end
 ```
 """
 macro cfgrammar(ex)
-	rules = Any[]
-	types = Symbol[]
-	bytype = Dict{Symbol,Vector{Int}}()
-	for e in ex.args
-		if isa(e, Expr)
-			if e.head == :(=)
-				s = e.args[1] # name of return type
-				rule = e.args[2] # expression?
-				rvec = Any[]
-				_parse_rule!(rvec, rule)
-				for r in rvec
-					push!(rules, r)
-					push!(types, s)
-					bytype[s] = push!(get(bytype, s, Int[]), length(rules))
-				end
-			end
-		end
-	end
-	alltypes = collect(keys(bytype))
-	is_terminal = [isterminal(rule, alltypes) for rule in rules]
-	is_eval = [iseval(rule) for rule in rules]
-	childtypes = [get_childtypes(rule, alltypes) for rule in rules]
-	return ContextFreeGrammar(rules, types, is_terminal, is_eval, bytype, childtypes)
+	return expr2cfgrammar(ex)
 end
 
 _parse_rule!(v::Vector{Any}, r) = push!(v, r)
