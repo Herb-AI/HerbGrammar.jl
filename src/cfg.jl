@@ -185,4 +185,4 @@ function _next_state!(node::RuleNode, grammar::Grammar, max_depth::Int)
 		return (node, worked)
 	    end
 	end
-    end
+end

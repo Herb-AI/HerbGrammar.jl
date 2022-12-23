@@ -1,6 +1,7 @@
 module Grammars
 
 import TreeView: walk_tree
+import JSON # grammar_io
 using AbstractTrees
 using DataStructures # NodeRecycler
 
@@ -11,13 +12,14 @@ include("rulenode.jl")
 include("grammar_base.jl")
 include("rulenode_operators.jl")
 include("utils.jl")
-
 include("cfg.jl")
+include("grammar_io.jl")
 
 export 
     Grammar,
     ContextFreeGrammar,
     RuleNode,
+
 
     @cfgrammar,
     max_arity,
@@ -49,6 +51,9 @@ export
     mindepth,
     containedin,
     subsequenceof,
-    has_children
+    has_children,
+
+    store_cfg, 
+    read_cfg
 
 end # module
