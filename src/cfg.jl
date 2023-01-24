@@ -74,22 +74,19 @@ function _parse_rule!(v::Vector{Any}, ex::Expr)
 	end
 end
 
-
 function Base.display(rulenode::RuleNode, grammar::ContextFreeGrammar)
-	root = get_executable(rulenode, grammar)
-	if isa(root, Expr)
-	    walk_tree(root)
-	else
-	    root
-	end
+	return rulenode2expr(rulenode, grammar)
 end
+
 
 """
 Adds a rule to the grammar. 
+If a rule is already in the grammar, it is ignored.
 Usage: 
 ```
-	add_rule!(grammar, Meta.parse("Real = |(1:9)"))
+	add_rule!(grammar, :("Real = Real + Real"))
 ```
+The syntax is identical to the syntax of @csgrammar, but only single rules are supported.
 """
 function add_rule!(cfgrammar :: ContextFreeGrammar, e::Expr)
 	if e.head == :(=)

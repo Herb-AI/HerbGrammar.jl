@@ -131,3 +131,58 @@ function rulesonleft(expr::RuleNode, path::Vector{Int})
 		return ruleset 
 	end
 end
+
+
+"""
+Converts a rulenode into a julia expression. 
+The returned expression can be evaluated with Julia semantics using eval().
+"""
+function rulenode2expr(rulenode::RuleNode, grammar::Grammar)
+	root = (rulenode._val != nothing) ?
+		rulenode._val : deepcopy(grammar.rules[rulenode.ind])
+	if !grammar.isterminal[rulenode.ind] # not terminal
+		root,j = _rulenode2expr(root, rulenode, grammar)
+	end
+	return root
+end
+
+
+function _rulenode2expr(expr::Expr, rulenode::RuleNode, grammar::Grammar, j=0)
+	for (k,arg) in enumerate(expr.args)
+		if isa(arg, Expr)
+			expr.args[k],j = _rulenode2expr(arg, rulenode, grammar, j)
+		elseif haskey(grammar.bytype, arg)
+			child = rulenode.children[j+=1]
+			expr.args[k] = (child._val != nothing) ?
+			child._val : deepcopy(grammar.rules[child.ind])
+			if !isterminal(grammar, child)
+				expr.args[k],_ = _rulenode2expr(expr.args[k], child, grammar, 0)
+			end
+		end
+	end
+	return expr, j
+end
+
+
+function _rulenode2expr(typ::Symbol, rulenode::RuleNode, grammar::Grammar, j=0)
+	retval = typ
+		if haskey(grammar.bytype, typ)
+			child = rulenode.children[1]
+			retval = (child._val !== nothing) ?
+				child._val : deepcopy(grammar.rules[child.ind])
+			if !grammar.isterminal[child.ind]
+				retval,_ = _rulenode2expr(retval, child, grammar, 0)
+			end
+		end
+	retval, j
+end
+
+
+function Base.display(rulenode::RuleNode, grammar::Grammar)
+	root = rulenode2expr(rulenode, grammar)
+	if isa(root, Expr)
+	    walk_tree(root)
+	else
+	    root
+	end
+end
