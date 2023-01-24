@@ -4,7 +4,7 @@ Grammar
 Represents a grammar and its production rules.
 Use the @grammar macro to create a Grammar object.
 """
-struct ContextFreeGrammar <: Grammar
+mutable struct ContextFreeGrammar <: Grammar
 	rules::Vector{Any}    # list of RHS of rules (subexpressions)
 	types::Vector{Symbol} # list of LHS of rules (types, all symbols)
 	isterminal::BitVector # whether rule i is terminal
@@ -84,114 +84,33 @@ function Base.display(rulenode::RuleNode, grammar::ContextFreeGrammar)
 	end
 end
 
-
-function _next_state!(node::RuleNode, grammar::Grammar, max_depth::Int)
-
-	if max_depth < 1
-	    return (node, false) # did not work
-	elseif isterminal(grammar, node)
-	    # do nothing
-	    if iseval(grammar, node.ind) && (node._val === nothing)  # evaluate the rule
-		node._val = eval(grammar.rules[node.ind].args[2])
-	    end
-	    return (node, false) # cannot change leaves
-	else # !isterminal
-	    # if node is not terminal and doesn't have children, expand every child
-	    if isempty(node.children)  
-		if max_depth ≤ 1
-		    return (node,false) # cannot expand
+"""
+Adds a rule to the grammar. 
+Usage: 
+```
+	add_rule!(grammar, Meta.parse("Real = |(1:9)"))
+```
+"""
+function add_rule!(cfgrammar :: ContextFreeGrammar, e::Expr)
+	if e.head == :(=)
+		s = e.args[1]		# Name of return type
+		rule = e.args[2]	# expression?
+		rvec = Any[]
+		_parse_rule!(rvec, rule)
+		for r ∈ rvec
+			if r ∈ cfgrammar.rules
+				continue
+			end
+			push!(cfgrammar.rules, r)
+			push!(cfgrammar.iseval, iseval(rule))
+			push!(cfgrammar.types, s)
+			cfgrammar.bytype[s] = push!(get(cfgrammar.bytype, s, Int[]), length(cfgrammar.rules))
 		end
-    
-		# build out the node
-		for c in child_types(grammar, node)
-    
-		    worked = false
-		    i = 0
-		    child = RuleNode(0)
-		    child_rules = grammar[c]
-		    while !worked && i < length(child_rules)
-			i += 1
-			child = RuleNode(child_rules[i])
-    
-			if iseval(grammar, child.ind) # if rule needs to be evaluated (_())
-			    child._val = eval(grammar.rules[child.ind].args[2])
-			end
-			worked = true
-			if !isterminal(grammar, child)
-			    child, worked = _next_state!(child, grammar, max_depth-1)
-			end
-		    end
-		    if !worked
-			return (node, false) # did not work
-		    end
-		    push!(node.children, child)
-		end
-    
-		return (node, true)
-	    else # not empty
-		# make one change, starting with rightmost child
-		worked = false
-		child_index = length(node.children) + 1
-		while !worked && child_index > 1
-		    child_index -= 1
-		    child = node.children[child_index]
-    
-		    # this modifies the node if succesfull
-		    child, child_worked = _next_state!(child, grammar, max_depth-1)
-		    while !child_worked
-			child_type = return_type(grammar, child)
-			child_rules = grammar[child_type]
-			i = something(findfirst(isequal(child.ind), child_rules), 0)
-			if i < length(child_rules)
-			    child_worked = true
-			    child = RuleNode(child_rules[i+1])
-    
-			    # node needs to be evaluated
-			    if iseval(grammar, child.ind)
-				child._val = eval(grammar.rules[child.ind].args[2])
-			    end
-    
-			    if !isterminal(grammar, child)
-				child, child_worked = _next_state!(child, grammar, max_depth-1)
-			    end
-			    node.children[child_index] = child
-			else
-			    break
-			end
-		    end
-    
-		    if child_worked
-			worked = true
-    
-			# reset remaining children
-			for child_index2 in child_index+1 : length(node.children)
-			    c = child_types(grammar, node)[child_index2]
-			    worked = false
-			    i = 0
-			    child = RuleNode(0)
-			    child_rules = grammar[c]
-			    while !worked && i < length(child_rules)
-				i += 1
-				child = RuleNode(child_rules[i])
-    
-				if iseval(grammar, child.ind)
-				    child._val = eval(grammar.rules[child.ind].args[2])
-				end
-    
-				worked = true
-				if !isterminal(grammar, child)
-				    child, worked = _next_state!(child, grammar, max_depth-1)
-				end
-			    end
-			    if !worked
-				break
-			    end
-			    node.children[child_index2] = child
-			end
-		    end
-		end
-    
-		return (node, worked)
-	    end
 	end
+	alltypes = collect(keys(cfgrammar.bytype))
+
+	# is_terminal and childtypes need to be recalculated from scratch, since a new type might 
+	# be added that was used as a terminal symbol before.
+	cfgrammar.isterminal = [isterminal(rule, alltypes) for rule ∈ cfgrammar.rules]
+	cfgrammar.childtypes = [get_childtypes(rule, alltypes) for rule ∈ cfgrammar.rules]
 end
