@@ -1,7 +1,6 @@
 module Grammars
 
 import TreeView: walk_tree
-import JSON # grammar_io
 using AbstractTrees
 using DataStructures # NodeRecycler
 
@@ -56,6 +55,7 @@ export
     has_children,
 
     store_cfg, 
-    read_cfg
+    read_cfg,
+    add_rule!
 
 end # module
