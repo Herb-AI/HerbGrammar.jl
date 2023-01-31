@@ -32,12 +32,13 @@ function mindepth(grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int})
     return minimum(dmap[grammar.bytype[typ]])
 end
 
+const SymbolTable = Dict{Symbol,Any}
 
 """
 Returns a symbol table populated with mapping from symbols in grammar to
 symbols in module mod or Main, if defined.
 """
-function Interpreter.SymbolTable(grammar::Grammar, mod::Module=Main)
+function Grammars.SymbolTable(grammar::Grammar, mod::Module=Main)
     tab = SymbolTable()
     for rule in grammar.rules
         _add_to_symboltable!(tab, rule, mod)
