@@ -11,6 +11,7 @@ end
 
 """
 Reads a CFG from a file file provided in `filepath`.
+Do not open any untrusted grammars.
 """
 function read_cfg(filepath::AbstractString)::ContextFreeGrammar
     # Read the contents of the file into a string

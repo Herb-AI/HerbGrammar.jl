@@ -4,9 +4,6 @@ import TreeView: walk_tree
 using AbstractTrees
 using DataStructures # NodeRecycler
 
-include("interpreter.jl")
-using .Interpreter
-
 include("rulenode.jl")
 include("grammar_base.jl")
 include("rulenode_operators.jl")
@@ -37,7 +34,6 @@ export
     iscomplete,
 
     SymbolTable,
-    interpret,
     
     change_expr,
     swap_node,
