@@ -144,12 +144,9 @@ function cleanup_removed_rules!(g::ContextFreeGrammar)
 	end
 	# update bytype
 	empty!(g.bytype)
-	@show g.bytype
 
 	for (idx, type) ∈ enumerate(g.types)
 		g.bytype[type] = push!(get(g.bytype, type, Int[]), idx)
 	end
-	@show g.bytype
-	@show g
 	return g
 end
