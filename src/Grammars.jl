@@ -9,6 +9,10 @@ include("grammar_base.jl")
 include("rulenode_operators.jl")
 include("utils.jl")
 include("cfg.jl")
+
+include("csg/constraints.jl")
+include("csg/csg.jl")
+
 include("grammar_io.jl")
 
 
