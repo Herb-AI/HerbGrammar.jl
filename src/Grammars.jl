@@ -25,6 +25,7 @@ export
     node_depth,
     isterminal,
     iseval,
+    isvariable,
     return_type,
     contains_returntype,
     nchildren,

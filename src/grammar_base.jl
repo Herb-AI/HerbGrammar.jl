@@ -158,6 +158,10 @@ Returns the number of children in the production rule used by node.
 """
 nchildren(grammar::Grammar, node::RuleNode) = length(child_types(grammar, node))
 
+"""
+Returns true if the rule used by the node represents a variable.
+"""
+isvariable(grammar::Grammar, node::RuleNode) = grammar.isterminal[node.ind] && grammar.rules[node.ind] isa Symbol
 
 """
 Returns true if the tree rooted at node contains at least one node at depth less than maxdepth
