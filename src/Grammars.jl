@@ -52,6 +52,8 @@ export
 
     store_cfg, 
     read_cfg,
-    add_rule!
+    add_rule!,
+    remove_rule!,
+    cleanup_removed_rules!
 
 end # module
