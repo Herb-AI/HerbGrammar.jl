@@ -12,6 +12,8 @@ include("cfg.jl")
 
 include("csg/constraints.jl")
 include("csg/csg.jl")
+include("csg/context.jl")
+include("csg/propagators.jl")
 
 include("grammar_io.jl")
 
@@ -22,7 +24,6 @@ export
     ContextFreeGrammar,
     ContextSensitiveGrammar,
     RuleNode,
-
 
     @cfgrammar,
     expr2cfgrammar,
@@ -43,6 +44,10 @@ export
     @csgrammar,
     expr2csgrammar,
     addconstraint!,
+
+    GrammarContext,
+    addparent!,
+    copy_and_insert,
 
     ComesAfter,
     Ordered,
