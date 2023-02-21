@@ -20,10 +20,12 @@ include("grammar_io.jl")
 export 
     Grammar,
     ContextFreeGrammar,
+    ContextSensitiveGrammar,
     RuleNode,
 
 
     @cfgrammar,
+    expr2cfgrammar,
     max_arity,
     depth,
     node_depth,
@@ -37,6 +39,16 @@ export
     get_childtypes,
     nonterminals,
     iscomplete,
+
+    @csgrammar,
+    expr2csgrammar,
+    addconstraint!,
+
+    ComesAfter,
+    Ordered,
+    Forbidden,
+    propagate,
+    propagate_index,
 
     SymbolTable,
     

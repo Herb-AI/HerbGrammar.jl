@@ -56,7 +56,3 @@ addconstraint!(grammar::ContextSensitiveGrammar, cons::Constraint) = push!(gramm
 function Base.display(rulenode::RuleNode, grammar::ContextSensitiveGrammar)
 	return rulenode2expr(rulenode, grammar)
 end
-
-function add_rule!(g::ContextSensitiveGrammar, e::Expr)
-	
-end
