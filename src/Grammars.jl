@@ -3,6 +3,7 @@ module Grammars
 import TreeView: walk_tree
 using AbstractTrees
 using DataStructures # NodeRecycler
+using Serialization # grammar_io
 
 include("rulenode.jl")
 include("grammar_base.jl")
@@ -72,8 +73,10 @@ export
     subsequenceof,
     has_children,
 
-    store_cfg, 
+    store_cfg,
     read_cfg,
+    store_csg,
+    read_csg,
     add_rule!,
     remove_rule!,
     cleanup_removed_rules!
