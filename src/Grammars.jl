@@ -11,10 +11,8 @@ include("rulenode_operators.jl")
 include("utils.jl")
 include("cfg.jl")
 
-include("csg/constraints.jl")
 include("csg/csg.jl")
 include("csg/context.jl")
-include("csg/propagators.jl")
 
 include("grammar_io.jl")
 
@@ -23,6 +21,8 @@ include("grammar_io.jl")
 export 
     Grammar,
     ContextFreeGrammar,
+
+    Constraint,
     ContextSensitiveGrammar,
     RuleNode,
 
