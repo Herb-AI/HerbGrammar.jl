@@ -9,16 +9,14 @@ include("rulenode.jl")
 include("grammar_base.jl")
 include("rulenode_operators.jl")
 include("utils.jl")
-include("cfg.jl")
+include("cfg/cfg.jl")
+include("cfg/probabilistic_cfg.jl")
 
 include("csg/csg.jl")
 include("csg/context.jl")
-
-include("probabilistic_cfg.jl")
+include("csg/probabilistic_csg.jl")
 
 include("grammar_io.jl")
-
-
 
 export 
     Grammar,
@@ -51,6 +49,7 @@ export
 
     @csgrammar,
     expr2csgrammar,
+    cfg2csg,
     addconstraint!,
 
     GrammarContext,
@@ -59,6 +58,9 @@ export
 
     @pcfgrammar,
     expr2pcfgrammar,
+
+    @pcsgrammar,
+    expr2pcsgrammar,
 
     SymbolTable,
     

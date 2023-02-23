@@ -46,7 +46,9 @@ end
 
 """
 @cfgrammar
-Define a grammar and return it as a Grammar. For example:
+Define a grammar and return it as a ContextFreeGrammar. 
+Syntax is identical to @csgrammar.
+For example:
 ```julia-repl
 grammar = @cfgrammar begin
 R = x
