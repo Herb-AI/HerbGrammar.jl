@@ -14,17 +14,24 @@ include("cfg.jl")
 include("csg/csg.jl")
 include("csg/context.jl")
 
+include("probabilistic_cfg.jl")
+
 include("grammar_io.jl")
 
 
 
 export 
     Grammar,
+    ContextFree, 
+    ContextSensitive,
+
     ContextFreeGrammar,
 
     Constraint,
     ContextSensitiveGrammar,
     RuleNode,
+
+    ProbabilisticCFG,
 
     @cfgrammar,
     expr2cfgrammar,
@@ -50,11 +57,8 @@ export
     addparent!,
     copy_and_insert,
 
-    ComesAfter,
-    Ordered,
-    Forbidden,
-    propagate,
-    propagate_index,
+    @pcfgrammar,
+    expr2pcfgrammar,
 
     SymbolTable,
     
