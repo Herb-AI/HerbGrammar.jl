@@ -51,6 +51,19 @@ function expr2pcfgrammar(ex::Expr)::ContextFreeGrammar
 	return ContextFreeGrammar(rules, types, is_terminal, is_eval, bytype, childtypes, probabilities)
 end
 
+"""
+@pcfgrammar
+Define a probabilistic grammar and return it as a ContextFreeGrammar. 
+Syntax is identical to @pcsgrammar.
+For example:
+```julia-repl
+grammar = @pcfgrammar begin
+0.5 : R = x
+0.3 : R = 1 | 2
+0.2 : R = R + R
+end
+```
+"""
 macro pcfgrammar(ex)
 	return expr2pcfgrammar(ex)
 end
