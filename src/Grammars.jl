@@ -71,6 +71,8 @@ export
     get_rulesequence,
     rulesoftype,
     rulesonleft,
+    rulenode2expr,
+    rulenode_probability,
 
     NodeRecycler,
     recycle!
