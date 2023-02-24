@@ -134,6 +134,25 @@ iseval(grammar::Grammar, index::Int) = grammar.iseval[index]
 
 
 """
+Return the probability for a rule in the grammar.
+"""
+function probability(grammar::Grammar, index::Int)::Real
+	if grammar.probabilities ≡ nothing
+		@warn "Requesting probability in a non-probabilistic grammar.\nUniform distribution is assumed."
+		# Assume uniform probability
+		return 1 / length(grammar.bytype[grammar.types[index]])
+	end
+	return grammar.probabilities[index]
+end
+
+
+"""
+Function for checking if a grammar is probabilistic.
+"""
+isprobabilistic(grammar::Grammar) = grammar.probabilities ≡ nothing
+
+
+"""
 Returns the number of children (nonterminals) of the production rule at rule_index.
 """
 nchildren(grammar::Grammar, rule_index::Int) = length(grammar.childtypes[rule_index])
