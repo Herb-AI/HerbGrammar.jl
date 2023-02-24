@@ -38,6 +38,8 @@ export
     node_depth,
     isterminal,
     iseval,
+    probability,
+    isprobabilistic,
     isvariable,
     return_type,
     contains_returntype,
