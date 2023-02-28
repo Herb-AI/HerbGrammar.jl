@@ -45,10 +45,11 @@ function expr2pcfgrammar(ex::Expr)::ContextFreeGrammar
 		end
 	end
 
+	log_probabilities = [log(x) for x ∈ probabilities]
 	is_terminal = [isterminal(rule, alltypes) for rule in rules]
 	is_eval = [iseval(rule) for rule in rules]
 	childtypes = [get_childtypes(rule, alltypes) for rule in rules]
-	return ContextFreeGrammar(rules, types, is_terminal, is_eval, bytype, childtypes, probabilities)
+	return ContextFreeGrammar(rules, types, is_terminal, is_eval, bytype, childtypes, log_probabilities)
 end
 
 """

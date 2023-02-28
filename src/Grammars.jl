@@ -38,6 +38,7 @@ export
     node_depth,
     isterminal,
     iseval,
+    log_probability,
     probability,
     isprobabilistic,
     isvariable,
@@ -72,7 +73,7 @@ export
     rulesoftype,
     rulesonleft,
     rulenode2expr,
-    rulenode_probability,
+    rulenode_log_probability,
 
     NodeRecycler,
     recycle!

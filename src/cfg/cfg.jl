@@ -10,7 +10,7 @@ mutable struct ContextFreeGrammar <: Grammar
 	iseval::BitVector     							# whether rule i is an eval rule
 	bytype::Dict{Symbol,Vector{Int}}   				# maps type to all rules of said type
 	childtypes::Vector{Vector{Symbol}} 				# list of types of the children for each rule. Empty if terminal
-	probabilities::Union{Vector{Real}, Nothing} 	# list of probabilities for the rules if this is a probabilistic grammar
+	log_probabilities::Union{Vector{Real}, Nothing} # list of probabilities for the rules if this is a probabilistic grammar
 end
 
 """

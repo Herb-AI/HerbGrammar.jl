@@ -134,22 +134,34 @@ iseval(grammar::Grammar, index::Int) = grammar.iseval[index]
 
 
 """
+Return the log probability for a rule in the grammar.
+"""
+function log_probability(grammar::Grammar, index::Int)::Real
+	if !isprobabilistic(grammar)
+		@warn "Requesting probability in a non-probabilistic grammar.\nUniform distribution is assumed."
+		# Assume uniform probability
+		return log(1 / length(grammar.bytype[grammar.types[index]]))
+	end
+	return grammar.log_probabilities[index]
+end
+
+"""
 Return the probability for a rule in the grammar.
+Use `log_probability` whenever possible.
 """
 function probability(grammar::Grammar, index::Int)::Real
-	if grammar.probabilities ≡ nothing
+	if !isprobabilistic(grammar)
 		@warn "Requesting probability in a non-probabilistic grammar.\nUniform distribution is assumed."
 		# Assume uniform probability
 		return 1 / length(grammar.bytype[grammar.types[index]])
 	end
-	return grammar.probabilities[index]
+	return ℯ^grammar.log_probabilities[index]
 end
-
 
 """
 Function for checking if a grammar is probabilistic.
 """
-isprobabilistic(grammar::Grammar) = grammar.probabilities ≡ nothing
+isprobabilistic(grammar::Grammar) = !(grammar.log_probabilities ≡ nothing)
 
 
 """
@@ -191,6 +203,8 @@ nchildren(grammar::Grammar, node::RuleNode) = length(child_types(grammar, node))
 Returns true if the rule used by the node represents a variable.
 """
 isvariable(grammar::Grammar, node::RuleNode) = grammar.isterminal[node.ind] && grammar.rules[node.ind] isa Symbol
+
+isvariable(grammar::Grammar, ind::Int) = grammar.isterminal[ind] && grammar.rules[ind] isa Symbol
 
 """
 Returns true if the tree rooted at node contains at least one node at depth less than maxdepth

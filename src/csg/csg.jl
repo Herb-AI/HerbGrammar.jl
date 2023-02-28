@@ -15,7 +15,7 @@ struct ContextSensitiveGrammar <: Grammar
 	iseval::BitVector
 	bytype::Dict{Symbol, Vector{Int}}
 	childtypes::Vector{Vector{Symbol}}
-	probabilities::Union{Vector{Real}, Nothing}
+	log_probabilities::Union{Vector{Real}, Nothing}
 	constraints::Vector{Constraint}
 end
 
@@ -59,7 +59,7 @@ function cfg2csg(g::ContextFreeGrammar)::ContextSensitiveGrammar
         g.iseval, 
         g.bytype, 
         g.childtypes, 
-        g.probabilities, 
+        g.log_probabilities, 
         []
     )
 end
