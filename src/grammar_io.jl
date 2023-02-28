@@ -3,13 +3,13 @@ Writes a context-free grammar to the file provided by `filepath`.
 """
 function store_cfg(filepath::AbstractString, grammar::ContextFreeGrammar)
     open(filepath, write=true) do file
-        if grammar.probabilities ≡ nothing
+        if !isprobabilistic(grammar)
             for (type, rule) ∈ zip(grammar.types, grammar.rules)
                 println(file, "$type = $rule")
             end
         else
-            for (type, rule, prob) ∈ zip(grammar.types, grammar.rules, grammar.probabilities)
-                println(file, "$prob : $type = $rule")
+            for (type, rule, prob) ∈ zip(grammar.types, grammar.rules, grammar.log_probabilities)
+                println(file, "$(ℯ^prob) : $type = $rule")
             end
         end
     end
@@ -57,7 +57,7 @@ The `grammarpath` file will contain a CFG definition, and the
 function store_csg(grammarpath::AbstractString, constraintspath::AbstractString, grammar::ContextSensitiveGrammar)
     # Store grammar as CFG
     store_cfg(grammarpath, ContextFreeGrammar(grammar.rules, grammar.types, 
-        grammar.isterminal, grammar.iseval, grammar.bytype, grammar.childtypes, grammar.probabilities))
+        grammar.isterminal, grammar.iseval, grammar.bytype, grammar.childtypes, grammar.log_probabilities))
     
     # Store constraints separately
     open(constraintspath, write=true) do file
@@ -77,7 +77,7 @@ function read_csg(grammarpath::AbstractString, constraintspath::AbstractString):
     close(file)
 
     return ContextSensitiveGrammar(g.rules, g.types, g.isterminal, 
-        g.iseval, g.bytype, g.childtypes, g.probabilities, constraints)
+        g.iseval, g.bytype, g.childtypes, g.log_probabilities, constraints)
 end
 
 """
@@ -92,7 +92,7 @@ function read_pcsg(grammarpath::AbstractString, constraintspath::AbstractString)
     close(file)
 
     return ContextSensitiveGrammar(g.rules, g.types, g.isterminal, 
-        g.iseval, g.bytype, g.childtypes, g.probabilities, constraints)
+        g.iseval, g.bytype, g.childtypes, g.log_probabilities, constraints)
 end
 
 

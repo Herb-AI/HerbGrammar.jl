@@ -60,13 +60,30 @@
             Real = 6 | 7 | 8
         end
         
-        Grammars.store_cfg("toy_cfg_grammar.grammar", g₁)
-        g₂ = Grammars.read_cfg("toy_cfg_grammar.grammar")
+        Grammars.store_cfg("toy_cfg.grammar", g₁)
+        g₂ = Grammars.read_cfg("toy_cfg.grammar")
         @test :Real ∈ g₂.types
         @test g₂.rules == collect(1:8)
 
         # delete file afterwards
-        rm("toy_cfg_grammar.grammar")
+        rm("toy_cfg.grammar")
+    end
+
+    @testset "Writing and loading probabilistic CFG to/from disk" begin
+        g₁ = @pcfgrammar begin
+            0.5 : Real = |(0:3)
+            0.5 : Real = x
+        end
+        
+        Grammars.store_cfg("toy_pcfg.grammar", g₁)
+        g₂ = Grammars.read_pcfg("toy_pcfg.grammar")
+        @test :Real ∈ g₂.types
+        @test g₂.rules == [0, 1, 2, 3, :x]
+        @test g₂.log_probabilities == g₁.log_probabilities
+
+
+        # delete file afterwards
+        rm("toy_pcfg.grammar")
     end
 
 
