@@ -186,3 +186,85 @@ function Base.show(io::IO, grammar::Grammar)
 	    println(io, i, ": ", grammar.types[i], " = ", grammar.rules[i])
 	end
 end
+
+
+function Base.display(rulenode::RuleNode, grammar::Grammar)
+	return rulenode2expr(rulenode, grammar)
+end
+
+
+"""
+Adds a rule to the grammar. 
+If a rule is already in the grammar, it is ignored.
+Usage: 
+```
+	add_rule!(grammar, :("Real = Real + Real"))
+```
+The syntax is identical to the syntax of @csgrammar/@cfgrammar, but only single rules are supported.
+"""
+function add_rule!(g::Grammar, e::Expr)
+	if e.head == :(=)
+		s = e.args[1]		# Name of return type
+		rule = e.args[2]	# expression?
+		rvec = Any[]
+		_parse_rule!(rvec, rule)
+		for r ∈ rvec
+			if r ∈ g.rules
+				continue
+			end
+			push!(g.rules, r)
+			push!(g.iseval, iseval(rule))
+			push!(g.types, s)
+			g.bytype[s] = push!(get(g.bytype, s, Int[]), length(g.rules))
+		end
+	end
+	alltypes = collect(keys(g.bytype))
+
+	# is_terminal and childtypes need to be recalculated from scratch, since a new type might 
+	# be added that was used as a terminal symbol before.
+	g.isterminal = [isterminal(rule, alltypes) for rule ∈ g.rules]
+	g.childtypes = [get_childtypes(rule, alltypes) for rule ∈ g.rules]
+	return g
+end
+
+
+"""
+Removes the rule corresponding to `idx` from the grammar. 
+In order to avoid shifting indices, the rule is replaced with `nothing`,
+and all other data structures are updated accordingly.
+"""
+function remove_rule!(g::Grammar, idx::Int)
+	type = g.types[idx]
+	g.rules[idx] = nothing
+	g.iseval[idx] = false
+	g.types[idx] = nothing
+	deleteat!(g.bytype[type], findall(isequal(idx), g.bytype[type]))
+	if length(g.bytype[type]) == 0
+		# remove type
+		delete!(g.bytype, type)
+		alltypes = collect(keys(g.bytype))
+		g.isterminal = [isterminal(rule, alltypes) for rule ∈ g.rules]
+		g.childtypes = [get_childtypes(rule, alltypes) for rule ∈ g.rules]
+	end
+	return g
+end
+
+
+"""
+Removes any placeholders for previously deleted rules. 
+This means that indices get shifted.
+"""
+function cleanup_removed_rules!(g::Grammar)
+	rules_to_cleanup = findall(isequal(nothing), g.rules)
+	# highest indices are removed first, otherwise their index will have shifted
+	for v ∈ [g.rules, g.types, g.isterminal, g.iseval, g.childtypes]
+		deleteat!(v, rules_to_cleanup)
+	end
+	# update bytype
+	empty!(g.bytype)
+
+	for (idx, type) ∈ enumerate(g.types)
+		g.bytype[type] = push!(get(g.bytype, type, Int[]), idx)
+	end
+	return g
+end
