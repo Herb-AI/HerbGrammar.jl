@@ -49,8 +49,18 @@ function get_childtypes(rule::Any, types::AbstractVector{Symbol})
     return retval
 end
 
+"""
+Represents all grammars.
+The library assumes that the grammar structs have at least the following attributes:
+rules::Vector{Any}    # list of RHS of rules (subexpressions)
+types::Vector{Symbol} # list of LHS of rules (types, all symbols)
+isterminal::BitVector # whether rule i is terminal
+iseval::BitVector     # whether rule i is an eval rule
+bytype::Dict{Symbol,Vector{Int}}   # maps type to all rules of said type
+childtypes::Vector{Vector{Symbol}} # list of types of the children for each rule. Empty if terminal
+probabilities::Union{Vector{Real}, Nothing} # List of probabilities for each rule. Nothing if grammar is non-probabilistic
+"""
 abstract type Grammar end
-
 
 Base.getindex(grammar::Grammar, typ::Symbol) = grammar.bytype[typ]
 
@@ -124,6 +134,37 @@ iseval(grammar::Grammar, index::Int) = grammar.iseval[index]
 
 
 """
+Return the log probability for a rule in the grammar.
+"""
+function log_probability(grammar::Grammar, index::Int)::Real
+	if !isprobabilistic(grammar)
+		@warn "Requesting probability in a non-probabilistic grammar.\nUniform distribution is assumed."
+		# Assume uniform probability
+		return log(1 / length(grammar.bytype[grammar.types[index]]))
+	end
+	return grammar.log_probabilities[index]
+end
+
+"""
+Return the probability for a rule in the grammar.
+Use `log_probability` whenever possible.
+"""
+function probability(grammar::Grammar, index::Int)::Real
+	if !isprobabilistic(grammar)
+		@warn "Requesting probability in a non-probabilistic grammar.\nUniform distribution is assumed."
+		# Assume uniform probability
+		return 1 / length(grammar.bytype[grammar.types[index]])
+	end
+	return ℯ^grammar.log_probabilities[index]
+end
+
+"""
+Function for checking if a grammar is probabilistic.
+"""
+isprobabilistic(grammar::Grammar) = !(grammar.log_probabilities ≡ nothing)
+
+
+"""
 Returns the number of children (nonterminals) of the production rule at rule_index.
 """
 nchildren(grammar::Grammar, rule_index::Int) = length(grammar.childtypes[rule_index])
@@ -162,6 +203,8 @@ nchildren(grammar::Grammar, node::RuleNode) = length(child_types(grammar, node))
 Returns true if the rule used by the node represents a variable.
 """
 isvariable(grammar::Grammar, node::RuleNode) = grammar.isterminal[node.ind] && grammar.rules[node.ind] isa Symbol
+
+isvariable(grammar::Grammar, ind::Int) = grammar.isterminal[ind] && grammar.rules[ind] isa Symbol
 
 """
 Returns true if the tree rooted at node contains at least one node at depth less than maxdepth

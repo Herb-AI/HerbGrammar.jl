@@ -9,22 +9,27 @@ include("rulenode.jl")
 include("grammar_base.jl")
 include("rulenode_operators.jl")
 include("utils.jl")
-include("cfg.jl")
+include("cfg/cfg.jl")
+include("cfg/probabilistic_cfg.jl")
 
 include("csg/csg.jl")
 include("csg/context.jl")
+include("csg/probabilistic_csg.jl")
 
 include("grammar_io.jl")
 
-
-
 export 
     Grammar,
+    ContextFree, 
+    ContextSensitive,
+
     ContextFreeGrammar,
 
     Constraint,
     ContextSensitiveGrammar,
     RuleNode,
+
+    ProbabilisticCFG,
 
     @cfgrammar,
     expr2cfgrammar,
@@ -33,6 +38,9 @@ export
     node_depth,
     isterminal,
     iseval,
+    log_probability,
+    probability,
+    isprobabilistic,
     isvariable,
     return_type,
     contains_returntype,
@@ -44,17 +52,18 @@ export
 
     @csgrammar,
     expr2csgrammar,
+    cfg2csg,
     addconstraint!,
 
     GrammarContext,
     addparent!,
     copy_and_insert,
 
-    ComesAfter,
-    Ordered,
-    Forbidden,
-    propagate,
-    propagate_index,
+    @pcfgrammar,
+    expr2pcfgrammar,
+
+    @pcsgrammar,
+    expr2pcsgrammar,
 
     SymbolTable,
     
@@ -63,6 +72,8 @@ export
     get_rulesequence,
     rulesoftype,
     rulesonleft,
+    rulenode2expr,
+    rulenode_log_probability,
 
     NodeRecycler,
     recycle!

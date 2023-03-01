@@ -15,8 +15,10 @@ struct ContextSensitiveGrammar <: Grammar
 	iseval::BitVector
 	bytype::Dict{Symbol, Vector{Int}}
 	childtypes::Vector{Vector{Symbol}}
+	log_probabilities::Union{Vector{Real}, Nothing}
 	constraints::Vector{Constraint}
 end
+
 
 """
 Function for converting an `Expr` to a `ContextSensitiveGrammar`.
@@ -24,33 +26,42 @@ If the expression is hardcoded, you should use the `@csgrammar` macro.
 Only expressions in the correct format can be converted.
 """
 function expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
-	rules = Any[]
-	types = Symbol[]
-	bytype = Dict{Symbol,Vector{Int}}()
-	for e ∈ ex.args
-	    if e isa Expr
-			if e.head == :(=)
-				s = e.args[1] 		# name of return type
-				rule = e.args[2] 	# expression?
-				rvec = Any[]
-				_parse_rule!(rvec, rule)
-				for r in rvec
-					push!(rules, r)
-					push!(types, s)
-					bytype[s] = push!(get(bytype, s, Int[]), length(rules))
-				end
-			end
-	    end
-	end
-	alltypes = collect(keys(bytype))
-	is_terminal = [isterminal(rule, alltypes) for rule in rules]
-	is_eval = [iseval(rule) for rule in rules]
-	childtypes = [get_childtypes(rule, alltypes) for rule in rules]
-	return ContextSensitiveGrammar(rules, types, is_terminal, is_eval, bytype, childtypes, [])
+	return cfg2csg(expr2cfgrammar(ex))
 end
 
+
+"""
+@csgrammar
+Define a grammar and return it as a ContextSensitiveGrammar. 
+Syntax is identical to @cfgrammar.
+For example:
+```julia-repl
+grammar = @csgrammar begin
+R = x
+R = 1 | 2
+R = R + R
+end
+```
+"""
 macro csgrammar(ex)
 	return expr2csgrammar(ex)
+end
+
+
+"""
+Converts a ContextFreeGrammar to a ContextSensitiveGrammar without any constraints.
+"""
+function cfg2csg(g::ContextFreeGrammar)::ContextSensitiveGrammar
+    return ContextSensitiveGrammar(
+        g.rules, 
+        g.types, 
+        g.isterminal, 
+        g.iseval, 
+        g.bytype, 
+        g.childtypes, 
+        g.log_probabilities, 
+        []
+    )
 end
 
 
