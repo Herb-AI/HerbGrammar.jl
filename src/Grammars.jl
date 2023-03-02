@@ -17,7 +17,7 @@ include("grammar_io.jl")
 export 
     Grammar,
     ContextFreeGrammar,
-    # # # # RuleNode,
+    RuleNode,
     NodeLoc,
 
 
