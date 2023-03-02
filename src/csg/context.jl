@@ -6,9 +6,10 @@ mutable struct GrammarContext
 	originalExpr::RuleNode    	# original expression being modified
 	nodeLocation::Vector{Int}   # path to he current node in the expression, 
                                 # 	a sequence of child indices for each parent
+	grammar::ContextSensitiveGrammar
 end
 
-GrammarContext(originalExpr::RuleNode) = GrammarContext(originalExpr, [])
+GrammarContext(originalExpr::RuleNode, grammar::ContextSensitiveGrammar) = GrammarContext(originalExpr, [], grammar)
 
 """
 Adds a parent to the context.
@@ -23,7 +24,7 @@ end
 Copies the given context and insert the parent in the node location.
 """
 function copy_and_insert(old_context::GrammarContext, parent::Int)
-	new_context = GrammarContext(old_context.originalExpr, deepcopy(old_context.nodeLocation))
+	new_context = GrammarContext(old_context.originalExpr, deepcopy(old_context.nodeLocation), old_context.grammar)
 	push!(new_context.nodeLocation, parent)
 	new_context
 end
