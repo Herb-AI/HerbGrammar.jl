@@ -9,14 +9,16 @@ include("grammar_base.jl")
 include("rulenode_operators.jl")
 include("utils.jl")
 include("cfg.jl")
+include("nodelocation.jl")
+include("sampling.jl")
 include("grammar_io.jl")
-
 
 
 export 
     Grammar,
     ContextFreeGrammar,
-    RuleNode,
+    # # # # RuleNode,
+    NodeLoc,
 
 
     @cfgrammar,
@@ -24,6 +26,7 @@ export
     depth,
     node_depth,
     isterminal,
+    sample,
     iseval,
     isvariable,
     return_type,
@@ -56,5 +59,6 @@ export
     add_rule!,
     remove_rule!,
     cleanup_removed_rules!
+
 
 end # module
