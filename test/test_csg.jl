@@ -12,8 +12,8 @@
         addconstraint!(g₁, Forbidden([9, 2]))
         addconstraint!(g₁, Ordered([1, 2]))
 
-        Grammars.store_csg("toy_csg_grammar.grammar", "toy_csg_grammar.constraints", g₁)
-        g₂ = Grammars.read_csg("toy_csg_grammar.grammar", "toy_csg_grammar.constraints")
+        store_csg("toy_csg_grammar.grammar", "toy_csg_grammar.constraints", g₁)
+        g₂ = read_csg("toy_csg_grammar.grammar", "toy_csg_grammar.constraints")
         @test :Real ∈ g₂.types
         @test all(x ∈ g₂.rules for x ∈ 1:8)
         @test :(Real + Real) ∈ g₂.rules

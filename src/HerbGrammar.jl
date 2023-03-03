@@ -1,4 +1,4 @@
-module Grammars
+module HerbGrammar
 
 import TreeView: walk_tree
 using AbstractTrees
@@ -76,7 +76,7 @@ export
     rulenode_log_probability,
 
     NodeRecycler,
-    recycle!
+    recycle!,
 
     mindepth_map,
     mindepth,
@@ -86,10 +86,12 @@ export
 
     store_cfg,
     read_cfg,
+    read_pcfg,
     store_csg,
     read_csg,
+    read_pcsg,
     add_rule!,
     remove_rule!,
     cleanup_removed_rules!
 
-end # module
+end # module HerbGrammar
