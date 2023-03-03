@@ -49,8 +49,18 @@ function get_childtypes(rule::Any, types::AbstractVector{Symbol})
     return retval
 end
 
+"""
+Represents all grammars.
+The library assumes that the grammar structs have at least the following attributes:
+rules::Vector{Any}    # list of RHS of rules (subexpressions)
+types::Vector{Symbol} # list of LHS of rules (types, all symbols)
+isterminal::BitVector # whether rule i is terminal
+iseval::BitVector     # whether rule i is an eval rule
+bytype::Dict{Symbol,Vector{Int}}   # maps type to all rules of said type
+childtypes::Vector{Vector{Symbol}} # list of types of the children for each rule. Empty if terminal
+probabilities::Union{Vector{Real}, Nothing} # List of probabilities for each rule. Nothing if grammar is non-probabilistic
+"""
 abstract type Grammar end
-
 
 Base.getindex(grammar::Grammar, typ::Symbol) = grammar.bytype[typ]
 
@@ -124,6 +134,37 @@ iseval(grammar::Grammar, index::Int) = grammar.iseval[index]
 
 
 """
+Return the log probability for a rule in the grammar.
+"""
+function log_probability(grammar::Grammar, index::Int)::Real
+	if !isprobabilistic(grammar)
+		@warn "Requesting probability in a non-probabilistic grammar.\nUniform distribution is assumed."
+		# Assume uniform probability
+		return log(1 / length(grammar.bytype[grammar.types[index]]))
+	end
+	return grammar.log_probabilities[index]
+end
+
+"""
+Return the probability for a rule in the grammar.
+Use `log_probability` whenever possible.
+"""
+function probability(grammar::Grammar, index::Int)::Real
+	if !isprobabilistic(grammar)
+		@warn "Requesting probability in a non-probabilistic grammar.\nUniform distribution is assumed."
+		# Assume uniform probability
+		return 1 / length(grammar.bytype[grammar.types[index]])
+	end
+	return ℯ^grammar.log_probabilities[index]
+end
+
+"""
+Function for checking if a grammar is probabilistic.
+"""
+isprobabilistic(grammar::Grammar) = !(grammar.log_probabilities ≡ nothing)
+
+
+"""
 Returns the number of children (nonterminals) of the production rule at rule_index.
 """
 nchildren(grammar::Grammar, rule_index::Int) = length(grammar.childtypes[rule_index])
@@ -163,6 +204,8 @@ Returns true if the rule used by the node represents a variable.
 """
 isvariable(grammar::Grammar, node::RuleNode) = grammar.isterminal[node.ind] && grammar.rules[node.ind] isa Symbol
 
+isvariable(grammar::Grammar, ind::Int) = grammar.isterminal[ind] && grammar.rules[ind] isa Symbol
+
 """
 Returns true if the tree rooted at node contains at least one node at depth less than maxdepth
 with the given return type.
@@ -185,4 +228,86 @@ function Base.show(io::IO, grammar::Grammar)
 	for i in eachindex(grammar.rules)
 	    println(io, i, ": ", grammar.types[i], " = ", grammar.rules[i])
 	end
+end
+
+
+function Base.display(rulenode::RuleNode, grammar::Grammar)
+	return rulenode2expr(rulenode, grammar)
+end
+
+
+"""
+Adds a rule to the grammar. 
+If a rule is already in the grammar, it is ignored.
+Usage: 
+```
+	add_rule!(grammar, :("Real = Real + Real"))
+```
+The syntax is identical to the syntax of @csgrammar/@cfgrammar, but only single rules are supported.
+"""
+function add_rule!(g::Grammar, e::Expr)
+	if e.head == :(=)
+		s = e.args[1]		# Name of return type
+		rule = e.args[2]	# expression?
+		rvec = Any[]
+		_parse_rule!(rvec, rule)
+		for r ∈ rvec
+			if r ∈ g.rules
+				continue
+			end
+			push!(g.rules, r)
+			push!(g.iseval, iseval(rule))
+			push!(g.types, s)
+			g.bytype[s] = push!(get(g.bytype, s, Int[]), length(g.rules))
+		end
+	end
+	alltypes = collect(keys(g.bytype))
+
+	# is_terminal and childtypes need to be recalculated from scratch, since a new type might 
+	# be added that was used as a terminal symbol before.
+	g.isterminal = [isterminal(rule, alltypes) for rule ∈ g.rules]
+	g.childtypes = [get_childtypes(rule, alltypes) for rule ∈ g.rules]
+	return g
+end
+
+
+"""
+Removes the rule corresponding to `idx` from the grammar. 
+In order to avoid shifting indices, the rule is replaced with `nothing`,
+and all other data structures are updated accordingly.
+"""
+function remove_rule!(g::Grammar, idx::Int)
+	type = g.types[idx]
+	g.rules[idx] = nothing
+	g.iseval[idx] = false
+	g.types[idx] = nothing
+	deleteat!(g.bytype[type], findall(isequal(idx), g.bytype[type]))
+	if length(g.bytype[type]) == 0
+		# remove type
+		delete!(g.bytype, type)
+		alltypes = collect(keys(g.bytype))
+		g.isterminal = [isterminal(rule, alltypes) for rule ∈ g.rules]
+		g.childtypes = [get_childtypes(rule, alltypes) for rule ∈ g.rules]
+	end
+	return g
+end
+
+
+"""
+Removes any placeholders for previously deleted rules. 
+This means that indices get shifted.
+"""
+function cleanup_removed_rules!(g::Grammar)
+	rules_to_cleanup = findall(isequal(nothing), g.rules)
+	# highest indices are removed first, otherwise their index will have shifted
+	for v ∈ [g.rules, g.types, g.isterminal, g.iseval, g.childtypes]
+		deleteat!(v, rules_to_cleanup)
+	end
+	# update bytype
+	empty!(g.bytype)
+
+	for (idx, type) ∈ enumerate(g.types)
+		g.bytype[type] = push!(get(g.bytype, type, Int[]), idx)
+	end
+	return g
 end

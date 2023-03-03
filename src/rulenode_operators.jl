@@ -178,6 +178,13 @@ function _rulenode2expr(typ::Symbol, rulenode::RuleNode, grammar::Grammar, j=0)
 end
 
 
+"""
+Calculates the log probability associated with a rulenode in a probabilistic grammar.
+"""
+function rulenode_log_probability(node::RuleNode, grammar::Grammar)
+	log_probability(grammar, node.ind) + sum((rulenode_log_probability(c, grammar) for c ∈ node.children), init=1)
+end
+
 function Base.display(rulenode::RuleNode, grammar::Grammar)
 	root = rulenode2expr(rulenode, grammar)
 	if isa(root, Expr)
