@@ -24,19 +24,19 @@
         end
 
         # Basic adding
-        Grammars.add_rule!(g₁, :(Real = 3))
+        add_rule!(g₁, :(Real = 3))
         @test g₁.rules == [1, 2, 3]
 
         # Adding multiple rules in one line
-        Grammars.add_rule!(g₁, :(Real = 4 | 5))
+        add_rule!(g₁, :(Real = 4 | 5))
         @test g₁.rules == [1, 2, 3, 4, 5]
 
         # Adding already existing rules
-        Grammars.add_rule!(g₁, :(Real = 5))
+        add_rule!(g₁, :(Real = 5))
         @test g₁.rules == [1, 2, 3, 4, 5]
 
         # Adding multiple already existing rules
-        Grammars.add_rule!(g₁, :(Real = |(1:9)))
+        add_rule!(g₁, :(Real = |(1:9)))
         @test g₁.rules == collect(1:9)
 
         # Adding other types
@@ -44,7 +44,7 @@
             Real = 1 | 2 | 3
         end
 
-        Grammars.add_rule!(g₂, :(Bool = Real ≤ Real))
+        add_rule!(g₂, :(Bool = Real ≤ Real))
         @test length(g₂.rules) == 4
         @test :Real ∈ g₂.types
         @test :Bool ∈ g₂.types
@@ -60,8 +60,8 @@
             Real = 6 | 7 | 8
         end
         
-        Grammars.store_cfg("toy_cfg.grammar", g₁)
-        g₂ = Grammars.read_cfg("toy_cfg.grammar")
+        store_cfg("toy_cfg.grammar", g₁)
+        g₂ = read_cfg("toy_cfg.grammar")
         @test :Real ∈ g₂.types
         @test g₂.rules == collect(1:8)
 
@@ -75,8 +75,8 @@
             0.5 : Real = x
         end
         
-        Grammars.store_cfg("toy_pcfg.grammar", g₁)
-        g₂ = Grammars.read_pcfg("toy_pcfg.grammar")
+        store_cfg("toy_pcfg.grammar", g₁)
+        g₂ = read_pcfg("toy_pcfg.grammar")
         @test :Real ∈ g₂.types
         @test g₂.rules == [0, 1, 2, 3, :x]
         @test g₂.log_probabilities == g₁.log_probabilities

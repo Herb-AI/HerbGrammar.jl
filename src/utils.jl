@@ -38,7 +38,7 @@ const SymbolTable = Dict{Symbol,Any}
 Returns a symbol table populated with mapping from symbols in grammar to
 symbols in module mod or Main, if defined.
 """
-function Grammars.SymbolTable(grammar::Grammar, mod::Module=Main)
+function HerbGrammar.SymbolTable(grammar::Grammar, mod::Module=Main)
     tab = SymbolTable()
     for rule in grammar.rules
         _add_to_symboltable!(tab, rule, mod)
