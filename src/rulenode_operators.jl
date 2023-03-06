@@ -19,7 +19,9 @@ function rulesoftype(node::RuleNode, ruleset::Set{Int})
 	end
 end
 
+rulesoftype(::Hole, ::Set{Int}) = Set()
 rulesoftype(node::RuleNode, grammar::Grammar, ruletype::Symbol) = rulesoftype(node, Set(grammar[ruletype]))
+rulesoftype(::Hole, ::Grammar, ::Symbol) = Set()
 
 
 """
@@ -46,9 +48,10 @@ function rulesoftype(node::RuleNode, ruleset::Set{Int}, ignoreNode::RuleNode)
 		return retval
 	end
 end
+rulesoftype(::Hole, ::Set{Int}, ::RuleNode) = Set()
 
 rulesoftype(node::RuleNode, grammar::Grammar, ruletype::Symbol, ignoreNode::RuleNode) = rulesoftype(node, Set(grammar[ruletype]), ignoreNode)
-
+rulesoftype(::Hole, ::Grammar, ::Symbol, ::RuleNode) = Set()
 
 """
 Replace a node in expr, specified by path, with new_expr.

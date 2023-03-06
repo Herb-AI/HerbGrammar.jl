@@ -27,7 +27,9 @@ export
 
     Constraint,
     ContextSensitiveGrammar,
+    AbstractRuleNode,
     RuleNode,
+    Hole,
 
     ProbabilisticCFG,
 

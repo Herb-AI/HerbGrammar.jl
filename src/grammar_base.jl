@@ -50,6 +50,13 @@ function get_childtypes(rule::Any, types::AbstractVector{Symbol})
 end
 
 """
+Returns the domain for the hole of a certain type
+	TODO: Should this be stored/cached in the grammar?
+"""
+get_domain(g::Grammar, type::Symbol)::BitVector = BitArray(r ∈ g.bytype[type] for r ∈ g.rules)
+
+
+"""
 Represents all grammars.
 The library assumes that the grammar structs have at least the following attributes:
 rules::Vector{Any}    # list of RHS of rules (subexpressions)

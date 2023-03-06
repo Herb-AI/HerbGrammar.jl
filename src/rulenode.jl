@@ -1,12 +1,21 @@
+"""
+Type for representing expression trees.
+"""
+abstract type AbstractRuleNode end
+
 
 """
 RuleNode
 Type for representing nodes in an expression tree.
 """
-mutable struct RuleNode
+mutable struct RuleNode <: AbstractRuleNode
 	ind::Int # index in grammar
 	_val::Any  #value of _() evals
-	children::Vector{RuleNode}
+	children::Vector{AbstractRuleNode}
+end
+
+mutable struct Hole <: AbstractRuleNode
+	domain::BitVector
 end
 
 RuleNode(ind::Int) = RuleNode(ind, nothing, RuleNode[])
@@ -15,13 +24,16 @@ RuleNode(ind::Int, _val::Any) = RuleNode(ind, _val, RuleNode[])
 
 include("recycler.jl")
 
-
-function Base.:(==)(A::RuleNode, B::RuleNode)
+function Base.:(==)(A::AbstractRuleNode, B::AbstractRuleNode)
+	# Holes
+	(A isa Hole && B isa Hole) && (A.domain == B.domain) ||
+	# RuleNodes
+	(A isa RuleNode && B isa RuleNode) && 
 	(A.ind == B.ind) &&
-	    (A._val == B._val) && 
-	    (length(A.children) == length(B.children)) && #required because zip doesn't check lengths
-	    all(isequal(a,b) for (a,b) in zip(A.children, B.children))
-    end
+	(A._val == B._val) && 
+	(length(A.children) == length(B.children)) && #required because zip doesn't check lengths
+	all(isequal(a,b) for (a,b) in zip(A.children, B.children))
+end
     
 
 function Base.hash(node::RuleNode, h::UInt=zero(UInt))
@@ -32,6 +44,9 @@ function Base.hash(node::RuleNode, h::UInt=zero(UInt))
 	return retval
 end
 
+function Base.hash(node::Hole, h::UInt=zero(UInt))
+	return hash(node.domain, h)
+end
 
 function Base.show(io::IO, node::RuleNode; separator=",", last_child::Bool=false)
 	print(io, node.ind)
@@ -46,8 +61,16 @@ function Base.show(io::IO, node::RuleNode; separator=",", last_child::Bool=false
 	end
 end
 
+function Base.show(io::IO, node::Hole; separator=",", last_child::Bool=false)
+	print(io, "hole[$(node.domain)]")
+	if !last_child
+		print(io, separator)
+	end
+end
+
 """
 Return the number of vertices in the tree rooted at root.
+Holes don't count.
 """
 function Base.length(root::RuleNode)
 	retval = 1
@@ -57,9 +80,16 @@ function Base.length(root::RuleNode)
 	return retval
 end
 
+"""
+Return the number of vertices in the tree rooted at root.
+Holes don't count.
+"""
+Base.length(::Hole) = 0
+
 
 """
 Return the depth of the expression tree rooted at root.
+Holes don't count.
 """
 function depth(root::RuleNode)
 	retval = 1
@@ -71,11 +101,19 @@ end
 
 
 """
+Return the depth of the expression tree rooted at root.
+Holes don't count.
+"""
+depth(::Hole) = 0
+
+
+"""
 Return the depth of node for an expression tree rooted at root. 
 Depth is 1 when root == node.
 """
-function node_depth(root::RuleNode, node::RuleNode)
+function node_depth(root::AbstractRuleNode, node::AbstractRuleNode)
 	root === node && return 1
+	root isa Hole && return 0
 	for c in root.children
 	    d = node_depth(c, node)
 	    d > 0 && (return d+1)
