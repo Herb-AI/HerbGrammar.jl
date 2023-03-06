@@ -19,7 +19,9 @@ mutable struct Hole <: AbstractRuleNode
 end
 
 RuleNode(ind::Int) = RuleNode(ind, nothing, RuleNode[])
+RuleNode(ind::Int, children::Vector{AbstractRuleNode}) = RuleNode(ind, nothing, children)
 RuleNode(ind::Int, children::Vector{RuleNode}) = RuleNode(ind, nothing, children)
+RuleNode(ind::Int, children::Vector{Hole}) = RuleNode(ind, nothing, children)
 RuleNode(ind::Int, _val::Any) = RuleNode(ind, _val, RuleNode[])
 
 include("recycler.jl")

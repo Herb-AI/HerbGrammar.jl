@@ -48,6 +48,7 @@ export
     contains_returntype,
     nchildren,
     child_types,
+    get_domain,
     get_childtypes,
     nonterminals,
     iscomplete,

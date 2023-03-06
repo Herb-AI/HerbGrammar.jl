@@ -57,7 +57,7 @@ rulesoftype(::Hole, ::Grammar, ::Symbol, ::RuleNode) = Set()
 Replace a node in expr, specified by path, with new_expr.
 Path is a sequence of child indices, starting from the node.
 """
-function swap_node(expr::RuleNode, new_expr::RuleNode, path::Vector{Int})
+function swap_node(expr::AbstractRuleNode, new_expr::AbstractRuleNode, path::Vector{Int})
 	if length(path) == 1
 		expr.children[path[begin]] = new_expr
 	else
@@ -67,13 +67,13 @@ end
 
 
 """
-Replace child i of a node,  a part of larger expr, with new_expr.
+Replace child i of a node, a part of larger expr, with new_expr.
 """
 function swap_node(expr::RuleNode, node::RuleNode, child_index::Int, new_expr::RuleNode)
 	if expr == node 
 		node.children[child_index] = new_expr
 	else
-		for child in expr.children
+		for child ∈ expr.children
 			swap_node(child, node, child_index, new_expr)
 		end
 	end
@@ -141,10 +141,10 @@ Converts a rulenode into a julia expression.
 The returned expression can be evaluated with Julia semantics using eval().
 """
 function rulenode2expr(rulenode::RuleNode, grammar::Grammar)
-	root = (rulenode._val != nothing) ?
+	root = (rulenode._val !== nothing) ?
 		rulenode._val : deepcopy(grammar.rules[rulenode.ind])
 	if !grammar.isterminal[rulenode.ind] # not terminal
-		root,j = _rulenode2expr(root, rulenode, grammar)
+		root,_ = _rulenode2expr(root, rulenode, grammar)
 	end
 	return root
 end
@@ -156,7 +156,7 @@ function _rulenode2expr(expr::Expr, rulenode::RuleNode, grammar::Grammar, j=0)
 			expr.args[k],j = _rulenode2expr(arg, rulenode, grammar, j)
 		elseif haskey(grammar.bytype, arg)
 			child = rulenode.children[j+=1]
-			expr.args[k] = (child._val != nothing) ?
+			expr.args[k] = (child._val !== nothing) ?
 			child._val : deepcopy(grammar.rules[child.ind])
 			if !isterminal(grammar, child)
 				expr.args[k],_ = _rulenode2expr(expr.args[k], child, grammar, 0)
@@ -187,6 +187,8 @@ Calculates the log probability associated with a rulenode in a probabilistic gra
 function rulenode_log_probability(node::RuleNode, grammar::Grammar)
 	log_probability(grammar, node.ind) + sum((rulenode_log_probability(c, grammar) for c ∈ node.children), init=1)
 end
+
+rulenode_log_probability(::Hole, ::Grammar) = 1
 
 function Base.display(rulenode::RuleNode, grammar::Grammar)
 	root = rulenode2expr(rulenode, grammar)
