@@ -27,18 +27,14 @@ RuleNode(ind::Int, grammar::Grammar) = RuleNode(ind, nothing, [Hole(get_domain(g
 RuleNode(ind::Int, _val::Any, grammar::Grammar) = RuleNode(ind, _val, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
 
 include("recycler.jl")
-
-function Base.:(==)(A::AbstractRuleNode, B::AbstractRuleNode)
-	# Holes
-	(A isa Hole && B isa Hole) && (A.domain == B.domain) ||
-	# RuleNodes
-	(A isa RuleNode && B isa RuleNode) && 
-	(A.ind == B.ind) &&
-	(A._val == B._val) && 
-	(length(A.children) == length(B.children)) && #required because zip doesn't check lengths
-	all(isequal(a,b) for (a,b) in zip(A.children, B.children))
-end
     
+Base.:(==)(::RuleNode, ::Hole) = false
+Base.:(==)(::Hole, ::RuleNode) = false
+Base.:(==)(A::RuleNode, B::RuleNode) = 
+	(A.ind == B.ind) && 
+	length(A.children) == length(B.children) && #required because zip doesn't check lengths
+	all(isequal(a, b) for (a, b) ∈ zip(A.children, B.children))
+Base.:(==)(A::Hole, B::Hole) = A.domain == B.domain
 
 function Base.hash(node::RuleNode, h::UInt=zero(UInt))
 	retval = hash(node.ind, h)
