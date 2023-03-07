@@ -1,17 +1,4 @@
 """
-	Contains base types from grammar and the related functions
-	The library assumes that the grammar structs have at least the following attributes:
-	rules::Vector{Any}    # list of RHS of rules (subexpressions)
-	types::Vector{Symbol} # list of LHS of rules (types, all symbols)
-	isterminal::BitVector # whether rule i is terminal
-	iseval::BitVector     # whether rule i is an eval rule
-	bytype::Dict{Symbol,Vector{Int}}   # maps type to all rules of said type
-	childtypes::Vector{Vector{Symbol}} # list of types of the children for each rule. Empty if terminal
-"""
-
-
-
-"""
 Returns true if the rule is terminal, ie does not contain any of the types in the provided vector.
 For example, :(x) is terminal, and :(1+1) is terminal, but :(Real + Real) is typically not.
 """
@@ -57,6 +44,7 @@ types::Vector{Symbol} # list of LHS of rules (types, all symbols)
 isterminal::BitVector # whether rule i is terminal
 iseval::BitVector     # whether rule i is an eval rule
 bytype::Dict{Symbol,Vector{Int}}   # maps type to all rules of said type
+domains::Dict{Symbol,BitVector}    # maps type to a domain bitvector
 childtypes::Vector{Vector{Symbol}} # list of types of the children for each rule. Empty if terminal
 probabilities::Union{Vector{Real}, Nothing} # List of probabilities for each rule. Nothing if grammar is non-probabilistic
 """
@@ -102,9 +90,8 @@ child_types(grammar::Grammar, rule_index::Int) = grammar.childtypes[rule_index]
 
 """
 Returns the domain for the hole of a certain type.
-	TODO: Should this be stored/cached in the grammar?
 """
-get_domain(g::Grammar, type::Symbol)::BitVector = BitArray(r ∈ g.bytype[type] for r ∈ 1:length(g.rules))
+get_domain(g::Grammar, type::Symbol)::BitVector = deepcopy(g.domains[type])
 
 """
 Returns the domain bitvector for a domain defined as rule index vector.
