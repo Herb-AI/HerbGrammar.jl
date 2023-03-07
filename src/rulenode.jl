@@ -18,11 +18,13 @@ mutable struct Hole <: AbstractRuleNode
 	domain::BitVector
 end
 
-RuleNode(ind::Int) = RuleNode(ind, nothing, RuleNode[])
+RuleNode(ind::Int) = RuleNode(ind, nothing, AbstractRuleNode[])
 RuleNode(ind::Int, children::Vector{AbstractRuleNode}) = RuleNode(ind, nothing, children)
 RuleNode(ind::Int, children::Vector{RuleNode}) = RuleNode(ind, nothing, children)
 RuleNode(ind::Int, children::Vector{Hole}) = RuleNode(ind, nothing, children)
-RuleNode(ind::Int, _val::Any) = RuleNode(ind, _val, RuleNode[])
+RuleNode(ind::Int, _val::Any) = RuleNode(ind, _val, AbstractRuleNode[])
+RuleNode(ind::Int, grammar::Grammar) = RuleNode(ind, nothing, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
+RuleNode(ind::Int, _val::Any, grammar::Grammar) = RuleNode(ind, _val, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
 
 include("recycler.jl")
 

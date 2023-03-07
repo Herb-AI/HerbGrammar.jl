@@ -102,6 +102,7 @@ function get_rulesequence(node::RuleNode, path::Vector{Int})
 	end
 end
 
+get_rulesequence(::Hole, ::Vector{Int}) = Vector{Int}()
 
 """
 Extracts rules in the left subtree defined by the path.
@@ -134,6 +135,8 @@ function rulesonleft(expr::RuleNode, path::Vector{Int})
 		return ruleset 
 	end
 end
+
+rulesonleft(::Hole, ::Vector{Int}) = Set{Int}()
 
 
 """
@@ -189,6 +192,74 @@ function rulenode_log_probability(node::RuleNode, grammar::Grammar)
 end
 
 rulenode_log_probability(::Hole, ::Grammar) = 1
+
+
+"""
+Returns true if the expression given by the node is complete expression, i.e., all leaves are terminal symbols
+"""
+function iscomplete(grammar::Grammar, node::RuleNode) 
+	if isterminal(grammar, node)
+		return true
+	elseif isempty(node.children)
+		# if not terminal but has children
+		return false
+	else
+		return all([iscomplete(grammar, c) for c in node.children])
+	end
+end
+
+iscomplete(grammar::Grammar, ::Hole) = false
+
+
+"""
+Returns the return type in the production rule used by node.
+"""
+return_type(grammar::Grammar, node::RuleNode) = grammar.types[node.ind]
+
+
+"""
+Returns the list of child types in the production rule used by node.
+"""
+child_types(grammar::Grammar, node::RuleNode) = grammar.childtypes[node.ind]
+
+
+"""
+Returns true if the production rule used by node is terminal, i.e., does not contain any nonterminal symbols.
+"""
+isterminal(grammar::Grammar, node::RuleNode) = grammar.isterminal[node.ind]
+
+
+"""
+Returns the number of children in the production rule used by node.
+"""
+nchildren(grammar::Grammar, node::RuleNode) = length(child_types(grammar, node))
+
+
+"""
+Returns true if the rule used by the node represents a variable.
+"""
+isvariable(grammar::Grammar, node::RuleNode) = grammar.isterminal[node.ind] && grammar.rules[node.ind] isa Symbol
+
+isvariable(grammar::Grammar, ind::Int) = grammar.isterminal[ind] && grammar.rules[ind] isa Symbol
+
+
+"""
+Returns true if the tree rooted at node contains at least one node at depth less than maxdepth
+with the given return type.
+"""
+function contains_returntype(node::RuleNode, grammar::Grammar, sym::Symbol, maxdepth::Int=typemax(Int))
+    maxdepth < 1 && return false
+    if return_type(grammar, node) == sym
+        return true
+    end
+    for c in node.children
+        if contains_returntype(c, grammar, sym, maxdepth-1)
+            return true
+        end
+    end
+    return false
+end
+
 
 function Base.display(rulenode::RuleNode, grammar::Grammar)
 	root = rulenode2expr(rulenode, grammar)
