@@ -5,8 +5,8 @@ using AbstractTrees
 using DataStructures # NodeRecycler
 using Serialization # grammar_io
 
-include("rulenode.jl")
 include("grammar_base.jl")
+include("rulenode.jl")
 include("rulenode_operators.jl")
 include("utils.jl")
 include("cfg/cfg.jl")
@@ -27,7 +27,9 @@ export
 
     Constraint,
     ContextSensitiveGrammar,
+    AbstractRuleNode,
     RuleNode,
+    Hole,
 
     ProbabilisticCFG,
 
@@ -46,6 +48,7 @@ export
     contains_returntype,
     nchildren,
     child_types,
+    get_domain,
     get_childtypes,
     nonterminals,
     iscomplete,

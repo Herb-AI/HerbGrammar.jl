@@ -1,17 +1,4 @@
 """
-	Contains base types from grammar and the related functions
-	The library assumes that the grammar structs have at least the following attributes:
-	rules::Vector{Any}    # list of RHS of rules (subexpressions)
-	types::Vector{Symbol} # list of LHS of rules (types, all symbols)
-	isterminal::BitVector # whether rule i is terminal
-	iseval::BitVector     # whether rule i is an eval rule
-	bytype::Dict{Symbol,Vector{Int}}   # maps type to all rules of said type
-	childtypes::Vector{Vector{Symbol}} # list of types of the children for each rule. Empty if terminal
-"""
-
-
-
-"""
 Returns true if the rule is terminal, ie does not contain any of the types in the provided vector.
 For example, :(x) is terminal, and :(1+1) is terminal, but :(Real + Real) is typically not.
 """
@@ -57,6 +44,7 @@ types::Vector{Symbol} # list of LHS of rules (types, all symbols)
 isterminal::BitVector # whether rule i is terminal
 iseval::BitVector     # whether rule i is an eval rule
 bytype::Dict{Symbol,Vector{Int}}   # maps type to all rules of said type
+domains::Dict{Symbol,BitVector}    # maps type to a domain bitvector
 childtypes::Vector{Vector{Symbol}} # list of types of the children for each rule. Empty if terminal
 probabilities::Union{Vector{Real}, Nothing} # List of probabilities for each rule. Nothing if grammar is non-probabilistic
 """
@@ -101,24 +89,19 @@ child_types(grammar::Grammar, rule_index::Int) = grammar.childtypes[rule_index]
 
 
 """
+Returns the domain for the hole of a certain type.
+"""
+get_domain(g::Grammar, type::Symbol)::BitVector = deepcopy(g.domains[type])
+
+"""
+Returns the domain bitvector for a domain defined as rule index vector.
+"""
+get_domain(g::Grammar, rules::Vector{Int})::BitVector = BitArray(r ∈ rules for r ∈ 1:length(g.rules))
+
+"""
 Returns true if the production rule at rule_index is terminal, i.e., does not contain any nonterminal symbols.
 """
 isterminal(grammar::Grammar, rule_index::Int) = grammar.isterminal[rule_index]
-
-
-"""
-Returns true if the expression given by the node is complete expression, i.e., all leaves are terminal symbols
-"""
-function iscomplete(grammar::Grammar, node::RuleNode) 
-	if isterminal(grammar, node)
-		return true
-	elseif isempty(node.children)
-		# if not terminal but has children
-		return false
-	else
-		return all([iscomplete(grammar, c) for c in node.children])
-	end
-end
 
 
 """
@@ -176,63 +159,10 @@ Returns the maximum arity (number of children) over all production rules in the 
 max_arity(grammar::Grammar) = maximum(length(cs) for cs in grammar.childtypes)
 
 
-"""
-Returns the return type in the production rule used by node.
-"""
-return_type(grammar::Grammar, node::RuleNode) = grammar.types[node.ind]
-
-
-"""
-Returns the list of child types in the production rule used by node.
-"""
-child_types(grammar::Grammar, node::RuleNode) = grammar.childtypes[node.ind]
-
-
-"""
-Returns true if the production rule used by node is terminal, i.e., does not contain any nonterminal symbols.
-"""
-isterminal(grammar::Grammar, node::RuleNode) = grammar.isterminal[node.ind]
-
-
-"""
-Returns the number of children in the production rule used by node.
-"""
-nchildren(grammar::Grammar, node::RuleNode) = length(child_types(grammar, node))
-
-"""
-Returns true if the rule used by the node represents a variable.
-"""
-isvariable(grammar::Grammar, node::RuleNode) = grammar.isterminal[node.ind] && grammar.rules[node.ind] isa Symbol
-
-isvariable(grammar::Grammar, ind::Int) = grammar.isterminal[ind] && grammar.rules[ind] isa Symbol
-
-"""
-Returns true if the tree rooted at node contains at least one node at depth less than maxdepth
-with the given return type.
-"""
-function contains_returntype(node::RuleNode, grammar::Grammar, sym::Symbol, maxdepth::Int=typemax(Int))
-    maxdepth < 1 && return false
-    if return_type(grammar, node) == sym
-        return true
-    end
-    for c in node.children
-        if contains_returntype(c, grammar, sym, maxdepth-1)
-            return true
-        end
-    end
-    return false
-end
-
-
 function Base.show(io::IO, grammar::Grammar)
 	for i in eachindex(grammar.rules)
 	    println(io, i, ": ", grammar.types[i], " = ", grammar.rules[i])
 	end
-end
-
-
-function Base.display(rulenode::RuleNode, grammar::Grammar)
-	return rulenode2expr(rulenode, grammar)
 end
 
 

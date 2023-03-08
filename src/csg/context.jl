@@ -3,12 +3,12 @@ Structure used to track the context.
 Contains the expression being modified and the path to the current node.
 """
 mutable struct GrammarContext
-	originalExpr::RuleNode    	# original expression being modified
-	nodeLocation::Vector{Int}   # path to he current node in the expression, 
-                                # 	a sequence of child indices for each parent
+	originalExpr::AbstractRuleNode	# original expression being modified
+	nodeLocation::Vector{Int}   	# path to he current node in the expression, 
+                                	# 	a sequence of child indices for each parent
 end
 
-GrammarContext(originalExpr::RuleNode) = GrammarContext(originalExpr, [])
+GrammarContext(originalExpr::AbstractRuleNode) = GrammarContext(originalExpr, [])
 
 """
 Adds a parent to the context.

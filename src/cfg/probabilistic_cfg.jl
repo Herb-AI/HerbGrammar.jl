@@ -49,7 +49,8 @@ function expr2pcfgrammar(ex::Expr)::ContextFreeGrammar
 	is_terminal = [isterminal(rule, alltypes) for rule in rules]
 	is_eval = [iseval(rule) for rule in rules]
 	childtypes = [get_childtypes(rule, alltypes) for rule in rules]
-	return ContextFreeGrammar(rules, types, is_terminal, is_eval, bytype, childtypes, log_probabilities)
+	domains = Dict(type => BitArray(r ∈ bytype[type] for r ∈ 1:length(rules)) for type ∈ alltypes)
+	return ContextFreeGrammar(rules, types, is_terminal, is_eval, bytype, domains, childtypes, log_probabilities)
 end
 
 """
