@@ -261,6 +261,13 @@ function contains_returntype(node::RuleNode, grammar::Grammar, sym::Symbol, maxd
 end
 
 
+"""
+Checks if a rulenode tree contains a hole.
+"""
+contains_hole(rn::RuleNode) = any(containsHole(c) for c ∈ rn.children)
+contains_hole(hole::Hole) = true
+
+
 function Base.display(rulenode::RuleNode, grammar::Grammar)
 	root = rulenode2expr(rulenode, grammar)
 	if isa(root, Expr)
