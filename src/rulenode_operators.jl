@@ -264,7 +264,7 @@ end
 """
 Checks if a rulenode tree contains a hole.
 """
-contains_hole(rn::RuleNode) = any(containsHole(c) for c ∈ rn.children)
+contains_hole(rn::RuleNode) = any(contains_hole(c) for c ∈ rn.children)
 contains_hole(hole::Hole) = true
 
 

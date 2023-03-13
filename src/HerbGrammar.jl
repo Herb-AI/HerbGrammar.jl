@@ -46,7 +46,7 @@ export
     isvariable,
     return_type,
     contains_returntype,
-    contains_hole
+    contains_hole,
     nchildren,
     child_types,
     get_domain,
