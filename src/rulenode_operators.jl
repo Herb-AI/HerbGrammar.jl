@@ -140,6 +140,25 @@ rulesonleft(::Hole, ::Vector{Int}) = Set{Int}()
 
 
 """
+Retrieves a rulenode at the original location by reference. 
+"""
+function get_node_at_location(root::RuleNode, location::Vector{Int})
+    if location == []
+        return root
+    else
+        return get_node_at_location(root.children[location[1]], location[2:end])
+    end
+end
+
+function get_node_at_location(root::Hole, location::Vector{Int})
+    if location == []
+        return root
+    end
+    return nothing
+end
+
+
+"""
 Converts a rulenode into a julia expression. 
 The returned expression can be evaluated with Julia semantics using eval().
 """

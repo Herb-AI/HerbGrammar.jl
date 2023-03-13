@@ -76,6 +76,7 @@ export
     get_rulesequence,
     rulesoftype,
     rulesonleft,
+    get_node_at_location,
     rulenode2expr,
     rulenode_log_probability,
 
