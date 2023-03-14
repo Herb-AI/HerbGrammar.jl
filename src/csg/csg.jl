@@ -8,7 +8,7 @@ abstract type Constraint end
 Structure representing context-sensitive grammar
 Extends Grammar with constraints
 """
-struct ContextSensitiveGrammar <: Grammar
+mutable struct ContextSensitiveGrammar <: Grammar
 	rules::Vector{Any}
 	types::Vector{Union{Symbol, Nothing}}
 	isterminal::BitVector
