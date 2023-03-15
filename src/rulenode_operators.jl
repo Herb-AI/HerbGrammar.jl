@@ -140,6 +140,25 @@ rulesonleft(::Hole, ::Vector{Int}) = Set{Int}()
 
 
 """
+Retrieves a rulenode at the original location by reference. 
+"""
+function get_node_at_location(root::RuleNode, location::Vector{Int})
+    if location == []
+        return root
+    else
+        return get_node_at_location(root.children[location[1]], location[2:end])
+    end
+end
+
+function get_node_at_location(root::Hole, location::Vector{Int})
+    if location == []
+        return root
+    end
+    return nothing
+end
+
+
+"""
 Converts a rulenode into a julia expression. 
 The returned expression can be evaluated with Julia semantics using eval().
 """
@@ -259,6 +278,13 @@ function contains_returntype(node::RuleNode, grammar::Grammar, sym::Symbol, maxd
     end
     return false
 end
+
+
+"""
+Checks if a rulenode tree contains a hole.
+"""
+contains_hole(rn::RuleNode) = any(contains_hole(c) for c ∈ rn.children)
+contains_hole(hole::Hole) = true
 
 
 function Base.display(rulenode::RuleNode, grammar::Grammar)

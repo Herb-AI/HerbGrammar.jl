@@ -46,6 +46,7 @@ export
     isvariable,
     return_type,
     contains_returntype,
+    contains_hole,
     nchildren,
     child_types,
     get_domain,
@@ -75,6 +76,7 @@ export
     get_rulesequence,
     rulesoftype,
     rulesonleft,
+    get_node_at_location,
     rulenode2expr,
     rulenode_log_probability,
 
