@@ -13,7 +13,6 @@ include("cfg/cfg.jl")
 include("cfg/probabilistic_cfg.jl")
 
 include("csg/csg.jl")
-include("csg/context.jl")
 include("csg/probabilistic_csg.jl")
 
 include("grammar_io.jl")
@@ -58,10 +57,6 @@ export
     expr2csgrammar,
     cfg2csg,
     addconstraint!,
-
-    GrammarContext,
-    addparent!,
-    copy_and_insert,
 
     @pcfgrammar,
     expr2pcfgrammar,
