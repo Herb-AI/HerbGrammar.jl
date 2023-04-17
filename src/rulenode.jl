@@ -3,7 +3,6 @@ Type for representing expression trees.
 """
 abstract type AbstractRuleNode end
 
-
 """
 RuleNode
 Type for representing nodes in an expression tree.
@@ -34,7 +33,8 @@ Base.:(==)(A::RuleNode, B::RuleNode) =
 	(A.ind == B.ind) && 
 	length(A.children) == length(B.children) && #required because zip doesn't check lengths
 	all(isequal(a, b) for (a, b) ∈ zip(A.children, B.children))
-Base.:(==)(A::Hole, B::Hole) = A.domain == B.domain
+# We do not know how the holes will be expanded yet, so we cannot assume equality even if the domains are equal.
+Base.:(==)(A::Hole, B::Hole) = false
 
 function Base.hash(node::RuleNode, h::UInt=zero(UInt))
 	retval = hash(node.ind, h)
@@ -85,6 +85,32 @@ Return the number of vertices in the tree rooted at root.
 Holes don't count.
 """
 Base.length(::Hole) = 0
+
+
+Base.isless(rn₁::AbstractRuleNode, rn₂::AbstractRuleNode)::Bool = _rulenode_compare(rn₁, rn₂) == -1
+
+
+"""
+Helper function for `Base.isless(::RuleNode, ::RuleNode)`
+Returns -1 if `rn₁ < rn₂`, 0 if `rn₁ == rn₂` and 1 if `rn₁ > rn₂`
+"""
+function _rulenode_compare(rn₁::RuleNode, rn₂::RuleNode)::Int
+	if rn₁.ind == rn₂.ind
+		for (c₁, c₂) ∈ zip(rn₁.children, rn₂.children)
+			comparison = _rulenode_compare(c₁, c₂)
+			if comparison ≠ 0
+				return o
+			end
+		end
+		return 0
+	else
+		return rn₁.ind < rn₂.ind ? -1 : 1
+	end
+end
+
+_rulenode_compare(::Hole, ::RuleNode) = -1
+_rulenode_compare(::RuleNode, ::Hole) = 1
+_rulenode_compare(::Hole, ::Hole) = 0
 
 
 """
