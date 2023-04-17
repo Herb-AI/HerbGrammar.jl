@@ -99,7 +99,7 @@ function _rulenode_compare(rn₁::RuleNode, rn₂::RuleNode)::Int
 		for (c₁, c₂) ∈ zip(rn₁.children, rn₂.children)
 			comparison = _rulenode_compare(c₁, c₂)
 			if comparison ≠ 0
-				return o
+				return comparison
 			end
 		end
 		return 0
