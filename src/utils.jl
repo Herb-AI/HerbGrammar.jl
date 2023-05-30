@@ -133,5 +133,5 @@ end
 Returns true if the node has children
 """
 has_children(rule::RuleNode) = !isempty(rule.children)
-
+has_children(::Hole) = false
 

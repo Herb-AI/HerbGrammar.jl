@@ -6,8 +6,8 @@ using StatsBase
 using DataStructures # NodeRecycler
 using Serialization # grammar_io
 
-include("rulenode.jl")
 include("grammar_base.jl")
+include("rulenode.jl")
 include("rulenode_operators.jl")
 include("utils.jl")
 include("nodelocation.jl")
@@ -18,7 +18,6 @@ include("cfg/cfg.jl")
 include("cfg/probabilistic_cfg.jl")
 
 include("csg/csg.jl")
-include("csg/context.jl")
 include("csg/probabilistic_csg.jl")
 
 include("grammar_io.jl")
@@ -32,7 +31,9 @@ export
 
     Constraint,
     ContextSensitiveGrammar,
+    AbstractRuleNode,
     RuleNode,
+    Hole,
     NodeLoc,
 
     ProbabilisticCFG,
@@ -51,8 +52,10 @@ export
     isvariable,
     return_type,
     contains_returntype,
+    contains_hole,
     nchildren,
     child_types,
+    get_domain,
     get_childtypes,
     nonterminals,
     iscomplete,
@@ -61,10 +64,6 @@ export
     expr2csgrammar,
     cfg2csg,
     addconstraint!,
-
-    GrammarContext,
-    addparent!,
-    copy_and_insert,
 
     @pcfgrammar,
     expr2pcfgrammar,
@@ -79,6 +78,7 @@ export
     get_rulesequence,
     rulesoftype,
     rulesonleft,
+    get_node_at_location,
     rulenode2expr,
     rulenode_log_probability,
 

@@ -9,6 +9,7 @@ mutable struct ContextFreeGrammar <: Grammar
 	isterminal::BitVector 							# whether rule i is terminal
 	iseval::BitVector     							# whether rule i is an eval rule
 	bytype::Dict{Symbol,Vector{Int}}   				# maps type to all rules of said type
+	domains::Dict{Symbol,BitVector}					# maps type to a domain bitvector
 	childtypes::Vector{Vector{Symbol}} 				# list of types of the children for each rule. Empty if terminal
 	log_probabilities::Union{Vector{Real}, Nothing} # list of probabilities for the rules if this is a probabilistic grammar
 end
@@ -41,7 +42,8 @@ function expr2cfgrammar(ex::Expr)::ContextFreeGrammar
 	is_terminal = [isterminal(rule, alltypes) for rule ∈ rules]
 	is_eval = [iseval(rule) for rule ∈ rules]
 	childtypes = [get_childtypes(rule, alltypes) for rule ∈ rules]
-	return ContextFreeGrammar(rules, types, is_terminal, is_eval, bytype, childtypes, nothing)
+	domains = Dict(type => BitArray(r ∈ bytype[type] for r ∈ 1:length(rules)) for type ∈ alltypes)
+	return ContextFreeGrammar(rules, types, is_terminal, is_eval, bytype, domains, childtypes, nothing)
 end
 
 """
