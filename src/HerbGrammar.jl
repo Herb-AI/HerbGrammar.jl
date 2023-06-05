@@ -29,6 +29,7 @@ export
     AbstractRuleNode,
     RuleNode,
     Hole,
+    HoleReference,
 
     ProbabilisticCFG,
 
