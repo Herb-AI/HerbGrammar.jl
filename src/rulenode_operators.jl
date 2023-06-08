@@ -179,7 +179,7 @@ function _rulenode2expr(expr::Expr, rulenode::RuleNode, grammar::Grammar, j=0)
 		elseif haskey(grammar.bytype, arg)
 			child = rulenode.children[j+=1]
 			expr.args[k] = (child._val !== nothing) ?
-			child._val : deepcopy(grammar.rules[child.ind])
+				child._val : deepcopy(grammar.rules[child.ind])
 			if !isterminal(grammar, child)
 				expr.args[k],_ = _rulenode2expr(expr.args[k], child, grammar, 0)
 			end
@@ -256,6 +256,8 @@ nchildren(grammar::Grammar, node::RuleNode) = length(child_types(grammar, node))
 
 """
 Returns true if the rule used by the node represents a variable.
+TODO: Check if variable is given an assignment in main module or any module 
+where definitions for blocks in the grammar might be given. (See SymbolTable)
 """
 isvariable(grammar::Grammar, node::RuleNode) = grammar.isterminal[node.ind] && grammar.rules[node.ind] isa Symbol
 
