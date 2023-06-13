@@ -48,6 +48,8 @@ Data structure for mapping terminal symbols in the [`Grammar`](@ref) to their Ju
 const SymbolTable = Dict{Symbol,Any}
 
 """
+    SymbolTable(grammar::Grammar, mod::Module=Main)
+
 Returns a [`SymbolTable`](@ref) populated with a mapping from symbols in the 
 [`Grammar`](@ref) to symbols in module `mod` or `Main`, if defined.
 """
@@ -147,8 +149,10 @@ end
 
 
 """
-Returns true if the node has children
+    has_children(node::RuleNode)
+
+Returns true if `node` has children
 """
-has_children(rule::RuleNode) = !isempty(rule.children)
+has_children(node::RuleNode) = !isempty(node.children)
 has_children(::Hole) = false
 
