@@ -1,7 +1,25 @@
 """
+	ContextFreeGrammar <: Grammar
+
 Represents a context-free grammar and its production rules.
-Use the @cfgrammar macro to create a ContextFreeGrammar object.
-Use the @pcfgrammar macro to create a ContextFreeGrammar object with probabilities.
+Consists of:
+
+- `rules::Vector{Any}`: A list of RHS of rules (subexpressions).
+- `types::Vector{Symbol}`: A list of LHS of rules (types, all symbols).
+- `isterminal::BitVector`: A bitvector where bit `i` represents whether rule `i` is terminal.
+- `iseval::BitVector`: A bitvector where bit `i` represents whether rule i is an eval rule.
+- `bytype::Dict{Symbol,Vector{Int}}`: A dictionary that maps a type to all rules of said type.
+- `domains::Dict{Symbol, BitVector}`: A dictionary that maps a type to a domain bitvector. 
+  The domain bitvector has bit `i` set to true iff the `i`th rule is of this type.
+- `childtypes::Vector{Vector{Symbol}}`: A list of types of the children for each rule. 
+  If a rule is terminal, the corresponding list is empty.
+- `log_probabilities::Union{Vector{Real}, Nothing}`: A list of probabilities for each rule. 
+  If the grammar is non-probabilistic, the list can be `nothing`.
+
+Use the [`@cfgrammar`](@ref) macro to create a [`ContextFreeGrammar`](@ref) object.
+Use the [`@pcfgrammar`](@ref) macro to create a [`ContextFreeGrammar`](@ref) object with probabilities.
+For context-sensitive grammars, see [`ContextSensitiveGrammar`](@ref).
+
 """
 mutable struct ContextFreeGrammar <: Grammar
 	rules::Vector{Any}    							# list of RHS of rules (subexpressions)
@@ -15,9 +33,23 @@ mutable struct ContextFreeGrammar <: Grammar
 end
 
 """
-Function for converting an `Expr` to a `ContextFreeGrammar`. 
-If the expression is hardcoded, you should use the `@cfgrammar` macro.
-Only expressions in the correct format can be converted.
+	expr2cfgrammar(ex::Expr)::ContextFreeGrammar
+
+A function for converting an `Expr` to a [`ContextFreeGrammar`](@ref).
+If the expression is hardcoded, you should use the [`@cfgrammar`](@ref) macro.
+Only expressions in the correct format (see [`@cfgrammar`](@ref)) can be converted.
+
+### Example usage:
+
+```@example
+grammar = expr2cfgrammar(
+	begin
+		R = x
+		R = 1 | 2
+		R = R + R
+	end
+)
+```
 """
 function expr2cfgrammar(ex::Expr)::ContextFreeGrammar
 	rules = Any[]
@@ -47,17 +79,36 @@ function expr2cfgrammar(ex::Expr)::ContextFreeGrammar
 end
 
 """
-@cfgrammar
-Define a grammar and return it as a ContextFreeGrammar. 
-Syntax is identical to @csgrammar.
-For example:
-```julia-repl
+	@cfgrammar
+
+A macro for defining a [`ContextFreeGrammar`](@ref). 
+
+### Example usage:
+```julia
 grammar = @cfgrammar begin
-R = x
-R = 1 | 2
-R = R + R
+	R = x
+	R = 1 | 2
+	R = R + R
 end
 ```
+
+### Syntax:
+
+- Literals: Symbols that are already defined in Julia are considered literals, such as `1`, `2`, or `π`.
+  For example: `R = 1`.
+- Variables: A variable is a symbol that is not a nonterminal symbol and not already defined in Julia.
+  For example: `R = x`.
+- Functions: Functions and infix operators that are defined in Julia or the `Main` module can be used 
+  with the default evaluator. For example: `R = R + R`, `R = f(a, b)`.
+- Combinations: Multiple rules can be defined on a single line in the grammar definition using the `|` symbol.
+  For example: `R = 1 | 2 | 3`.
+- Iterators: Another way to define multiple rules is by providing a Julia iterator after a `|` symbol.
+  For example: `R = |(1:9)`.
+
+### Related:
+
+- [`@csgrammar`](@ref) uses the same syntax to create [`ContextSensitiveGrammar`](@ref)s.
+- [`@pcfgrammar`](@ref) uses a similar syntax to create probabilistic [`ContextFreeGrammar`](@ref)s.
 """
 macro cfgrammar(ex)
 	return expr2cfgrammar(ex)

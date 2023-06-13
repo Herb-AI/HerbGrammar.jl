@@ -1,17 +1,19 @@
 """
-Returns all rules of a specific type used in a RuleNode.
+	rulesoftype(node::RuleNode, ruleset::Set{Int})
+
+Returns every rule in the ruleset that is also used in the [`AbstractRuleNode`](@ref) tree.
 """
 function rulesoftype(node::RuleNode, ruleset::Set{Int})
 	retval = Set()
 
-	if node.ind in ruleset
+	if node.ind ∈ ruleset
 		union!(retval, [node.ind])
 	end
 
 	if isempty(node.children)
 		return retval
 	else
-		for child in node.children
+		for child ∈ node.children
 			union!(retval, rulesoftype(child, ruleset))
 		end
 
@@ -19,13 +21,24 @@ function rulesoftype(node::RuleNode, ruleset::Set{Int})
 	end
 end
 
-rulesoftype(::Hole, ::Set{Int}) = Set()
-rulesoftype(node::RuleNode, grammar::Grammar, ruletype::Symbol) = rulesoftype(node, Set(grammar[ruletype]))
-rulesoftype(::Hole, ::Grammar, ::Symbol) = Set()
+rulesoftype(::Hole, ::Set{Int}) = Set{Int}()
+
+"""
+	rulesoftype(node::RuleNode, grammar::Grammar, ruletype::Symbol)
+
+Returns every rule of nonterminal symbol `ruletype` that is also used in the [`AbstractRuleNode`](@ref) tree.
+"""
+rulesoftype(node::RuleNode, grammar::Grammar, ruletype::Symbol) = rulesoftype(node, Set{Int}(grammar[ruletype]))
+rulesoftype(::Hole, ::Grammar, ::Symbol) = Set{Int}()
 
 
 """
-Returns all rules of a specific type used in a RuleNode but not in the ignoreNode.
+	rulesoftype(node::RuleNode, ruleset::Set{Int}, ignoreNode::RuleNode)
+
+Returns every rule in the ruleset that is also used in the [`AbstractRuleNode`](@ref) tree, but not in the `ignoreNode` subtree.
+
+!!! warning
+	The `ignoreNode` must be a subtree of `node` for it to have an effect.
 """
 function rulesoftype(node::RuleNode, ruleset::Set{Int}, ignoreNode::RuleNode)
 	retval = Set()
@@ -34,28 +47,40 @@ function rulesoftype(node::RuleNode, ruleset::Set{Int}, ignoreNode::RuleNode)
 		return retval
 	end
 
-	if node.ind in ruleset
+	if node.ind ∈ ruleset
 		union!(retval, [node.ind])
 	end
 
 	if isempty(node.children)
 		return retval
 	else
-		for child in node.children
+		for child ∈ node.children
 			union!(retval, rulesoftype(child, ruleset))
 		end
 
 		return retval
 	end
 end
+rulesoftype(node::RuleNode, ruleset::Set{Int}, ::Hole) = rulesoftype(node, ruleset)
 rulesoftype(::Hole, ::Set{Int}, ::RuleNode) = Set()
+rulesoftype(::Hole, ::Set{Int}, ::Hole) = Set()
 
+"""
+	rulesoftype(node::RuleNode, grammar::Grammar, ruletype::Symbol, ignoreNode::RuleNode)
+
+Returns every rule of nonterminal symbol `ruletype` that is also used in the [`AbstractRuleNode`](@ref) tree, but not in the `ignoreNode` subtree.
+
+!!! warning
+	The `ignoreNode` must be a subtree of `node` for it to have an effect.
+"""
 rulesoftype(node::RuleNode, grammar::Grammar, ruletype::Symbol, ignoreNode::RuleNode) = rulesoftype(node, Set(grammar[ruletype]), ignoreNode)
 rulesoftype(::Hole, ::Grammar, ::Symbol, ::RuleNode) = Set()
 
 """
-Replace a node in expr, specified by path, with new_expr.
-Path is a sequence of child indices, starting from the node.
+	swap_node(expr::AbstractRuleNode, new_expr::AbstractRuleNode, path::Vector{Int})
+
+Replace a node in `expr`, specified by `path`, with `new_expr`.
+Path is a sequence of child indices, starting from the root node.
 """
 function swap_node(expr::AbstractRuleNode, new_expr::AbstractRuleNode, path::Vector{Int})
 	if length(path) == 1
@@ -67,7 +92,9 @@ end
 
 
 """
-Replace child i of a node, a part of larger expr, with new_expr.
+	swap_node(expr::RuleNode, node::RuleNode, child_index::Int, new_expr::RuleNode)
+
+Replace child `i` of a node, a part of larger `expr`, with `new_expr`.
 """
 function swap_node(expr::RuleNode, node::RuleNode, child_index::Int, new_expr::RuleNode)
 	if expr == node 
@@ -81,13 +108,15 @@ end
 
 
 """
-Extract derivation sequence from path (sequence of child indices).
+	get_rulesequence(node::RuleNode, path::Vector{Int})
+
+Extract the derivation sequence from a path (sequence of child indices) and an [`AbstractRuleNode`](@ref).
 If the path is deeper than the deepest node, it returns what it has.
 """
 function get_rulesequence(node::RuleNode, path::Vector{Int})
 	if node.ind == 0 # sign for empty node 
 		return Vector{Int}()
-	elseif isempty(node.children) # no childnen, nowehere to follow the path; still return the index
+	elseif isempty(node.children) # no children, nowhere to follow the path; still return the index
 		return [node.ind]
 	elseif isempty(path)
 		return [node.ind]
@@ -105,11 +134,13 @@ end
 get_rulesequence(::Hole, ::Vector{Int}) = Vector{Int}()
 
 """
-Extracts rules in the left subtree defined by the path.
+	rulesonleft(expr::RuleNode, path::Vector{Int})::Set{Int}
+
+Finds all rules that are used in the left subtree defined by the path.
 """
-function rulesonleft(expr::RuleNode, path::Vector{Int})
+function rulesonleft(expr::RuleNode, path::Vector{Int})::Set{Int}
 	if isempty(expr.children)
-		# if the encoutered node is terminal or non-expanded non-terminal, return node id
+		# if the encountered node is terminal or non-expanded non-terminal, return node id
 		Set{Int}(expr.ind)
 	elseif isempty(path)
 		# if path is empty, collect the entire subtree
@@ -140,7 +171,9 @@ rulesonleft(::Hole, ::Vector{Int}) = Set{Int}()
 
 
 """
-Retrieves a rulenode at the original location by reference. 
+	get_node_at_location(root::RuleNode, location::Vector{Int})
+
+Retrieves a [`RuleNode`](@ref) at the given location by reference. 
 """
 function get_node_at_location(root::RuleNode, location::Vector{Int})
     if location == []
@@ -159,8 +192,10 @@ end
 
 
 """
-Converts a rulenode into a julia expression. 
-The returned expression can be evaluated with Julia semantics using eval().
+	rulenode2expr(rulenode::RuleNode, grammar::Grammar)
+
+Converts a [`RuleNode`](@ref) into a Julia expression corresponding to the rule definitions in the grammar.
+The returned expression can be evaluated with Julia semantics using `eval()`.
 """
 function rulenode2expr(rulenode::RuleNode, grammar::Grammar)
 	root = (rulenode._val !== nothing) ?
@@ -214,7 +249,10 @@ rulenode_log_probability(::Hole, ::Grammar) = 1
 
 
 """
-Returns true if the expression given by the node is complete expression, i.e., all leaves are terminal symbols
+	iscomplete(grammar::Grammar, node::RuleNode) 
+
+Returns true if the expression represented by the [`RuleNode`](@ref) is a complete expression, 
+meaning that it is fully defined and doesn't have any [`Hole`](@ref)s.
 """
 function iscomplete(grammar::Grammar, node::RuleNode) 
 	if isterminal(grammar, node)
@@ -231,42 +269,51 @@ iscomplete(grammar::Grammar, ::Hole) = false
 
 
 """
-Returns the return type in the production rule used by node.
-"""
-return_type(grammar::Grammar, node::RuleNode) = grammar.types[node.ind]
+	return_type(grammar::Grammar, node::RuleNode)
 
-
+Gives the return type or nonterminal symbol in the production rule used by `node`.
 """
-Returns the list of child types in the production rule used by node.
-"""
-child_types(grammar::Grammar, node::RuleNode) = grammar.childtypes[node.ind]
+return_type(grammar::Grammar, node::RuleNode)::Symbol = grammar.types[node.ind]
 
 
 """
-Returns true if the production rule used by node is terminal, i.e., does not contain any nonterminal symbols.
-"""
-isterminal(grammar::Grammar, node::RuleNode) = grammar.isterminal[node.ind]
+	child_types(grammar::Grammar, node::RuleNode)
 
-
+Returns the list of child types (nonterminal symbols) in the production rule used by `node`.
 """
-Returns the number of children in the production rule used by node.
-"""
-nchildren(grammar::Grammar, node::RuleNode) = length(child_types(grammar, node))
+child_types(grammar::Grammar, node::RuleNode)::Vector{Symbol} = grammar.childtypes[node.ind]
 
 
 """
-Returns true if the rule used by the node represents a variable.
-TODO: Check if variable is given an assignment in main module or any module 
-where definitions for blocks in the grammar might be given. (See SymbolTable)
-"""
-isvariable(grammar::Grammar, node::RuleNode) = grammar.isterminal[node.ind] && grammar.rules[node.ind] isa Symbol
+	isterminal(grammar::Grammar, node::RuleNode)::Bool
 
-isvariable(grammar::Grammar, ind::Int) = grammar.isterminal[ind] && grammar.rules[ind] isa Symbol
+Returns true if the production rule used by `node` is terminal, i.e., does not contain any nonterminal symbols.
+"""
+isterminal(grammar::Grammar, node::RuleNode)::Bool = grammar.isterminal[node.ind]
 
 
 """
-Returns true if the tree rooted at node contains at least one node at depth less than maxdepth
-with the given return type.
+	nchildren(grammar::Grammar, node::RuleNode)::Int
+
+Returns the number of children in the production rule used by `node`.
+"""
+nchildren(grammar::Grammar, node::RuleNode)::Int = length(child_types(grammar, node))
+
+"""
+	isvariable(grammar::Grammar, node::RuleNode)::Bool
+
+Returns true if the rule used by `node` represents a variable.
+"""
+isvariable(grammar::Grammar, node::RuleNode)::Bool = grammar.isterminal[node.ind] && grammar.rules[node.ind] isa Symbol
+
+isvariable(grammar::Grammar, ind::Int)::Bool = grammar.isterminal[ind] && grammar.rules[ind] isa Symbol
+
+
+"""
+	contains_returntype(node::RuleNode, grammar::Grammar, sym::Symbol, maxdepth::Int=typemax(Int))
+
+Returns true if the tree rooted at `node` contains at least one node at depth less than `maxdepth`
+with the given return type or nonterminal symbol.
 """
 function contains_returntype(node::RuleNode, grammar::Grammar, sym::Symbol, maxdepth::Int=typemax(Int))
     maxdepth < 1 && return false
@@ -283,7 +330,9 @@ end
 
 
 """
-Checks if a rulenode tree contains a hole.
+	contains_hole(rn::RuleNode) = any(contains_hole(c) for c ∈ rn.children)
+
+Checks if an [`AbstractRuleNode`](@ref) tree contains a [`Hole`](@ref).
 """
 contains_hole(rn::RuleNode) = any(contains_hole(c) for c ∈ rn.children)
 contains_hole(hole::Hole) = true
