@@ -72,6 +72,11 @@ Add constraint to the grammar
 """
 addconstraint!(grammar::ContextSensitiveGrammar, cons::Constraint) = push!(grammar.constraints, cons)
 
+"""
+Clear all constraints from the grammar
+"""
+clearconstraints!(grammar::ContextSensitiveGrammar) = empty!(grammar.constraints)
+
 function Base.display(rulenode::RuleNode, grammar::ContextSensitiveGrammar)
 	return rulenode2expr(rulenode, grammar)
 end

@@ -57,6 +57,7 @@ export
     @csgrammar,
     expr2csgrammar,
     cfg2csg,
+    clearconstraints!,
     addconstraint!,
 
     @pcfgrammar,
