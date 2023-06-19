@@ -41,6 +41,9 @@ Base.:(==)(A::RuleNode, B::RuleNode) =
 # We do not know how the holes will be expanded yet, so we cannot assume equality even if the domains are equal.
 Base.:(==)(A::Hole, B::Hole) = false
 
+Base.copy(r::RuleNode) = RuleNode(r.ind, r._val, r.children)
+Base.copy(h::Hole) = Hole(h.domain)
+
 function Base.hash(node::RuleNode, h::UInt=zero(UInt))
 	retval = hash(node.ind, h)
 	for child in node.children
