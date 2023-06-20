@@ -42,7 +42,7 @@ Base.:(==)(A::RuleNode, B::RuleNode) =
 Base.:(==)(A::Hole, B::Hole) = false
 
 Base.copy(r::RuleNode) = RuleNode(r.ind, r._val, r.children)
-Base.copy(h::Hole) = Hole(h.domain)
+Base.copy(h::Hole) = Hole(copy(h.domain))
 
 function Base.hash(node::RuleNode, h::UInt=zero(UInt))
 	retval = hash(node.ind, h)
