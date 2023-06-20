@@ -53,6 +53,7 @@ export
     get_childtypes,
     nonterminals,
     iscomplete,
+    parse_rule!,
 
     @csgrammar,
     expr2csgrammar,
