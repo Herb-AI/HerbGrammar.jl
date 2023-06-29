@@ -2,6 +2,7 @@ module HerbGrammar
 
 import TreeView: walk_tree
 using AbstractTrees
+using StatsBase
 using DataStructures # NodeRecycler
 using Serialization # grammar_io
 
@@ -9,6 +10,10 @@ include("grammar_base.jl")
 include("rulenode.jl")
 include("rulenode_operators.jl")
 include("utils.jl")
+include("nodelocation.jl")
+include("sampling.jl")
+
+
 include("cfg/cfg.jl")
 include("cfg/probabilistic_cfg.jl")
 
@@ -29,6 +34,7 @@ export
     AbstractRuleNode,
     RuleNode,
     Hole,
+    NodeLoc,
 
     ProbabilisticCFG,
 
@@ -38,6 +44,7 @@ export
     depth,
     node_depth,
     isterminal,
+    sample,
     iseval,
     log_probability,
     probability,

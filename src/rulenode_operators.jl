@@ -256,6 +256,7 @@ nchildren(grammar::Grammar, node::RuleNode) = length(child_types(grammar, node))
 
 """
 Returns true if the rule used by the node represents a variable.
+      
 TODO: Check if variable is given an assignment in main module or any module 
 where definitions for blocks in the grammar might be given. (See SymbolTable)
 """
