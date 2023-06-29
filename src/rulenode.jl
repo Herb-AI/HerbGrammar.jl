@@ -62,6 +62,25 @@ RuleNode(ind::Int, children::Vector{RuleNode}) = RuleNode(ind, nothing, children
 RuleNode(ind::Int, children::Vector{Hole}) = RuleNode(ind, nothing, children)
 
 """
+	RuleNode(ind::Int, grammar::Grammar)
+
+Creates a [`RuleNode`](@ref) for the [`Grammar`](@ref) rule with index `ind`, with [`Hole`](@ref)s 
+with the appropriate domains as children.
+"""
+RuleNode(ind::Int, grammar::Grammar) = RuleNode(ind, nothing, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
+
+"""
+	RuleNode(ind::Int, _val::Any, grammar::Grammar)
+
+Creates a [`RuleNode`](@ref) for the [`Grammar`](@ref) rule with index `ind`, with immediately evaluated value `_val` 
+and with [`Hole`](@ref)s with the appropriate domains as children.
+
+!!! compat
+	Evaluate immediately functionality is not yet supported by most of Herb.jl.
+"""
+RuleNode(ind::Int, _val::Any, grammar::Grammar) = RuleNode(ind, _val, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
+
+"""
 	RuleNode(ind::Int, _val::Any)
 
 Create a [`RuleNode`](@ref) for the [`Grammar`](@ref) rule with index `ind`, 
@@ -77,24 +96,6 @@ Create a [`RuleNode`](@ref) for the [`Grammar`](@ref) rule with index `ind`,
 """
 RuleNode(ind::Int, _val::Any) = RuleNode(ind, _val, AbstractRuleNode[])
 
-"""
-	RuleNode(ind::Int, grammar::Grammar)
-
-Creates a [`RuleNode`](@ref) for the [`Grammar`](@ref) rule with index `ind`, with [`Hole`](@ref)s 
-with the appropriate domains as children.
-```
-RuleNode(ind::Int, grammar::Grammar) = RuleNode(ind, nothing, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
-
-```
-	RuleNode(ind::Int, _val::Any, grammar::Grammar)
-
-Creates a [`RuleNode`](@ref) for the [`Grammar`](@ref) rule with index `ind`, with immediately evaluated value `_val` 
-and with [`Hole`](@ref)s with the appropriate domains as children.
-
-!!! compat
-	Evaluate immediately functionality is not yet supported by most of Herb.jl.
-"""
-RuleNode(ind::Int, _val::Any, grammar::Grammar) = RuleNode(ind, _val, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
 
 include("recycler.jl")
     
