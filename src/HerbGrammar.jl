@@ -34,6 +34,7 @@ export
     AbstractRuleNode,
     RuleNode,
     Hole,
+    HoleReference,
     NodeLoc,
 
     ProbabilisticCFG,
@@ -59,10 +60,12 @@ export
     get_childtypes,
     nonterminals,
     iscomplete,
+    parse_rule!,
 
     @csgrammar,
     expr2csgrammar,
     cfg2csg,
+    clearconstraints!,
     addconstraint!,
 
     @pcfgrammar,

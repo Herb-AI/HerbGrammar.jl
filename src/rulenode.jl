@@ -17,6 +17,11 @@ mutable struct Hole <: AbstractRuleNode
 	domain::BitVector
 end
 
+struct HoleReference
+    hole::Hole
+    path::Vector{Int}
+end
+
 RuleNode(ind::Int) = RuleNode(ind, nothing, AbstractRuleNode[])
 RuleNode(ind::Int, children::Vector{AbstractRuleNode}) = RuleNode(ind, nothing, children)
 RuleNode(ind::Int, children::Vector{RuleNode}) = RuleNode(ind, nothing, children)
@@ -35,6 +40,9 @@ Base.:(==)(A::RuleNode, B::RuleNode) =
 	all(isequal(a, b) for (a, b) ∈ zip(A.children, B.children))
 # We do not know how the holes will be expanded yet, so we cannot assume equality even if the domains are equal.
 Base.:(==)(A::Hole, B::Hole) = false
+
+Base.copy(r::RuleNode) = RuleNode(r.ind, r._val, r.children)
+Base.copy(h::Hole) = Hole(copy(h.domain))
 
 function Base.hash(node::RuleNode, h::UInt=zero(UInt))
 	retval = hash(node.ind, h)
