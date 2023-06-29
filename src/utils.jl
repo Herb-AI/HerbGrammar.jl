@@ -7,7 +7,7 @@ AbstractTrees.printnode(io::IO, node::RuleNode) = print(io, node.ind)
 Returns the minimum depth achievable for each production rule, dmap.
 """
 function mindepth_map(grammar::Grammar)
-    dmap0 = Int[isterminal(grammar,i) ? 0 : typemax(Int)/2 for i in eachindex(grammar.rules)]
+    dmap0 = Int[isterminal(grammar,i) ? 1 : typemax(Int)/2 for i in eachindex(grammar.rules)]
     dmap1 = fill(-1, length(grammar.rules)) 
     while dmap0 != dmap1
         for i in eachindex(grammar.rules)
@@ -20,7 +20,7 @@ end
 
 
 function _mindepth(grammar::Grammar, rule_index::Int, dmap::AbstractVector{Int})
-    isterminal(grammar, rule_index) && return 0
+    isterminal(grammar, rule_index) && return 1
     return 1 + maximum([mindepth(grammar, ctyp, dmap) for ctyp in child_types(grammar, rule_index)])
 end
 
