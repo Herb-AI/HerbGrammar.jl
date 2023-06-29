@@ -6,14 +6,15 @@ abstract type Constraint end
 
 """
 Structure representing context-sensitive grammar
-Extends ExprRules.Grammar with constraints
+Extends Grammar with constraints
 """
-struct ContextSensitiveGrammar <: Grammar
+mutable struct ContextSensitiveGrammar <: Grammar
 	rules::Vector{Any}
 	types::Vector{Union{Symbol, Nothing}}
 	isterminal::BitVector
 	iseval::BitVector
 	bytype::Dict{Symbol, Vector{Int}}
+	domains::Dict{Symbol,BitVector}    				
 	childtypes::Vector{Vector{Symbol}}
 	log_probabilities::Union{Vector{Real}, Nothing}
 	constraints::Vector{Constraint}
@@ -58,6 +59,7 @@ function cfg2csg(g::ContextFreeGrammar)::ContextSensitiveGrammar
         g.isterminal, 
         g.iseval, 
         g.bytype, 
+		g.domains,
         g.childtypes, 
         g.log_probabilities, 
         []

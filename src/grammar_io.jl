@@ -54,14 +54,14 @@ Writes a context-sensitive grammar to the files at `grammarpath` and `constraint
 The `grammarpath` file will contain a CFG definition, and the
 `constraintspath` file will contain the constraints of the CSG.
 """
-function store_csg(grammarpath::AbstractString, constraintspath::AbstractString, grammar::ContextSensitiveGrammar)
+function store_csg(grammarpath::AbstractString, constraintspath::AbstractString, g::ContextSensitiveGrammar)
     # Store grammar as CFG
-    store_cfg(grammarpath, ContextFreeGrammar(grammar.rules, grammar.types, 
-        grammar.isterminal, grammar.iseval, grammar.bytype, grammar.childtypes, grammar.log_probabilities))
+    store_cfg(grammarpath, ContextFreeGrammar(g.rules, g.types, 
+        g.isterminal, g.iseval, g.bytype, g.domains, g.childtypes, g.log_probabilities))
     
     # Store constraints separately
     open(constraintspath, write=true) do file
-        serialize(file, grammar.constraints)
+        serialize(file, g.constraints)
     end
 end
 
@@ -77,7 +77,7 @@ function read_csg(grammarpath::AbstractString, constraintspath::AbstractString):
     close(file)
 
     return ContextSensitiveGrammar(g.rules, g.types, g.isterminal, 
-        g.iseval, g.bytype, g.childtypes, g.log_probabilities, constraints)
+        g.iseval, g.bytype, g.domains, g.childtypes, g.log_probabilities, constraints)
 end
 
 """
@@ -92,7 +92,7 @@ function read_pcsg(grammarpath::AbstractString, constraintspath::AbstractString)
     close(file)
 
     return ContextSensitiveGrammar(g.rules, g.types, g.isterminal, 
-        g.iseval, g.bytype, g.childtypes, g.log_probabilities, constraints)
+        g.iseval, g.bytype, g.domains, g.childtypes, g.log_probabilities, constraints)
 end
 
 
