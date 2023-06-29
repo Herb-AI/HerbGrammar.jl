@@ -1,25 +1,5 @@
-"""
-	rulesoftype(node::RuleNode, ruleset::Set{Int})
-
-Returns every rule in the ruleset that is also used in the [`AbstractRuleNode`](@ref) tree.
-"""
-function rulesoftype(node::RuleNode, ruleset::Set{Int})
-	retval = Set()
-
-	if node.ind ∈ ruleset
-		union!(retval, [node.ind])
-	end
-
-	if isempty(node.children)
-		return retval
-	else
-		for child ∈ node.children
-			union!(retval, rulesoftype(child, ruleset))
-		end
-
-		return retval
-	end
-end
+HerbCore.RuleNode(ind::Int, grammar::Grammar) = RuleNode(ind, nothing, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
+HerbCore.RuleNode(ind::Int, _val::Any, grammar::Grammar) = RuleNode(ind, _val, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
 
 rulesoftype(::Hole, ::Set{Int}) = Set{Int}()
 
@@ -327,16 +307,6 @@ function contains_returntype(node::RuleNode, grammar::Grammar, sym::Symbol, maxd
     end
     return false
 end
-
-
-"""
-	contains_hole(rn::RuleNode) = any(contains_hole(c) for c ∈ rn.children)
-
-Checks if an [`AbstractRuleNode`](@ref) tree contains a [`Hole`](@ref).
-"""
-contains_hole(rn::RuleNode) = any(contains_hole(c) for c ∈ rn.children)
-contains_hole(hole::Hole) = true
-
 
 function Base.display(rulenode::RuleNode, grammar::Grammar)
 	root = rulenode2expr(rulenode, grammar)
