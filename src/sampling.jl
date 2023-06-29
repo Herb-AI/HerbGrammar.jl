@@ -19,7 +19,7 @@ end
 Generates a random RuleNode of return type typ and maximum depth max_depth guided by a minimum depth map dmap.
 """
 function Base.rand(::Type{RuleNode}, grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int}, 
-    max_depth::Int=10, bin::Union{NodeRecycler,Nothing}=nothing)
+    max_depth::Int=10)
     rules = grammar[typ]
     filtered = filter(r->dmap[r] ≤ max_depth, rules)
     if isempty(filtered)
@@ -31,12 +31,12 @@ function Base.rand(::Type{RuleNode}, grammar::Grammar, typ::Symbol, dmap::Abstra
     @assert max_depth >= 0
 
     rulenode = iseval(grammar, rule_index) ?
-        RuleNode(bin, rule_index, Core.eval(grammar, rule_index)) :
-        RuleNode(bin, rule_index)
+        RuleNode(rule_index, Core.eval(grammar, rule_index)) :
+        RuleNode(rule_index)
 
     if !grammar.isterminal[rule_index]
         for ch in child_types(grammar, rule_index)
-            push!(rulenode.children, rand(RuleNode, grammar, ch, dmap, max_depth-1, bin))
+            push!(rulenode.children, rand(RuleNode, grammar, ch, dmap, max_depth-1))
         end
     end
     return rulenode
@@ -46,6 +46,7 @@ mutable struct RuleNodeAndCount
     node::RuleNode
     cnt::Int
 end
+
 """
     sample(root::RuleNode, typ::Symbol, grammar::Grammar, maxdepth::Int=typemax(Int))
 

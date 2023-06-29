@@ -6,8 +6,9 @@ using StatsBase
 using DataStructures # NodeRecycler
 using Serialization # grammar_io
 
+using ..HerbCore
+
 include("grammar_base.jl")
-include("rulenode.jl")
 include("rulenode_operators.jl")
 include("utils.jl")
 include("nodelocation.jl")
@@ -23,7 +24,6 @@ include("csg/probabilistic_csg.jl")
 include("grammar_io.jl")
 
 export 
-    Grammar,
     ContextFree, 
     ContextSensitive,
 
@@ -42,8 +42,6 @@ export
     @cfgrammar,
     expr2cfgrammar,
     max_arity,
-    depth,
-    node_depth,
     isterminal,
     sample,
     iseval,
@@ -53,7 +51,6 @@ export
     isvariable,
     return_type,
     contains_returntype,
-    contains_hole,
     nchildren,
     child_types,
     get_domain,
@@ -77,16 +74,8 @@ export
     SymbolTable,
     
     change_expr,
-    swap_node,
-    get_rulesequence,
-    rulesoftype,
-    rulesonleft,
-    get_node_at_location,
     rulenode2expr,
     rulenode_log_probability,
-
-    NodeRecycler,
-    recycle!,
 
     mindepth_map,
     mindepth,
