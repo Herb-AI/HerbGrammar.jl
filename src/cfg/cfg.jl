@@ -61,7 +61,7 @@ function expr2cfgrammar(ex::Expr)::ContextFreeGrammar
 				s = e.args[1] 		# name of return type
 				rule = e.args[2] 	# expression?
 				rvec = Any[]
-				_parse_rule!(rvec, rule)
+				parse_rule!(rvec, rule)
 				for r ∈ rvec
 					push!(rules, r)
 					push!(types, s)
@@ -114,15 +114,15 @@ macro cfgrammar(ex)
 	return expr2cfgrammar(ex)
 end
 
-_parse_rule!(v::Vector{Any}, r) = push!(v, r)
+parse_rule!(v::Vector{Any}, r) = push!(v, r)
 
-function _parse_rule!(v::Vector{Any}, ex::Expr)
+function parse_rule!(v::Vector{Any}, ex::Expr)
 	if ex.head == :call && ex.args[1] == :|
 		terms = length(ex.args) == 2 ?
 		collect(eval(ex.args[2])) :    #|(a:c) case
 		ex.args[2:end]                 #a|b|c case
 		for t in terms
-			_parse_rule!(v, t)
+			parse_rule!(v, t)
 		end
 	else
 		push!(v, ex)

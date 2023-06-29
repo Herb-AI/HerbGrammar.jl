@@ -8,26 +8,10 @@ using StatsBase
 
 Generates a random RuleNode of return type typ and maximum depth max_depth.
 """
-function Base.rand(::Type{RuleNode}, grammar::Grammar, typ::Symbol, max_depth::Int=10)
-    rules = grammar[typ]
-    
-    if max_depth <= 1
-        terminals = filter(r->isterminal(grammar,r), rules)
-        rule_index = !isempty(terminals) ? StatsBase.sample(terminals) : StatsBase.sample(rules)
-    else    
-        rule_index = StatsBase.sample(rules)
-    end
-
-    rulenode = iseval(grammar, rule_index) ?
-        RuleNode(rule_index, Core.eval(grammar, rule_index)) :
-        RuleNode(rule_index)
-
-    if !grammar.isterminal[rule_index]
-        for ch in child_types(grammar, rule_index)
-            push!(rulenode.children, rand(RuleNode, grammar, ch, max_depth-1))
-        end
-    end
-    return rulenode
+function Base.rand(::Type{RuleNode}, grammar::Grammar, typ::Symbol, max_depth::Int=10, 
+    bin::Union{NodeRecycler,Nothing}=nothing)
+    dmap = mindepth_map(grammar)
+    return rand(RuleNode, grammar, typ, dmap, max_depth)
 end
 """
     rand(::Type{RuleNode}, grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int}, max_depth::Int=10)
@@ -37,7 +21,14 @@ Generates a random RuleNode of return type typ and maximum depth max_depth guide
 function Base.rand(::Type{RuleNode}, grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int}, 
     max_depth::Int=10)
     rules = grammar[typ]
-    rule_index = StatsBase.sample(filter(r->dmap[r] ≤ max_depth, rules))
+    filtered = filter(r->dmap[r] ≤ max_depth, rules)
+    if isempty(filtered)
+        error("The random function could not find an expression of the given $max_depth depth")
+        return
+    end
+
+    rule_index = StatsBase.sample(filtered)
+    @assert max_depth >= 0
 
     rulenode = iseval(grammar, rule_index) ?
         RuleNode(rule_index, Core.eval(grammar, rule_index)) :

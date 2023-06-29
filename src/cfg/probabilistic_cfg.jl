@@ -30,7 +30,7 @@ function expr2pcfgrammar(ex::Expr)::ContextFreeGrammar
 					rule = e.args[2].args[2] 	# extract rule from block expr
 
 					rvec = Any[]
-					_parse_rule!(rvec, rule)
+					parse_rule!(rvec, rule)
 					for r ∈ rvec
 						push!(rules, r)
 						push!(types, s)
