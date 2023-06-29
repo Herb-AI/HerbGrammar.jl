@@ -34,7 +34,6 @@ export
     AbstractRuleNode,
     RuleNode,
     Hole,
-    HoleReference,
     NodeLoc,
 
     ProbabilisticCFG,

@@ -209,7 +209,7 @@ function add_rule!(g::Grammar, e::Expr)
 		s = e.args[1]		# Name of return type
 		rule = e.args[2]	# expression?
 		rvec = Any[]
-		_parse_rule!(rvec, rule)
+		parse_rule!(rvec, rule)
 		for r ∈ rvec
 			if r ∈ g.rules
 				continue
