@@ -8,8 +8,7 @@ using StatsBase
 
 Generates a random RuleNode of return type typ and maximum depth max_depth.
 """
-function Base.rand(::Type{RuleNode}, grammar::Grammar, typ::Symbol, max_depth::Int=10, 
-    bin::Union{NodeRecycler,Nothing}=nothing)
+function Base.rand(::Type{RuleNode}, grammar::Grammar, typ::Symbol, max_depth::Int=10)
     dmap = mindepth_map(grammar)
     return rand(RuleNode, grammar, typ, dmap, max_depth)
 end
