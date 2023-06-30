@@ -4,10 +4,14 @@ AbstractTrees.printnode(io::IO, node::RuleNode) = print(io, node.ind)
 
 
 """
-Returns the minimum depth achievable for each production rule, dmap.
+    mindepth_map(grammar::Grammar)
+
+Returns the minimum depth achievable for each production rule in the [`Grammar`](@ref).
+In other words, this function finds the depths of the lowest trees that can be made 
+using each of the available production rules as a root.
 """
 function mindepth_map(grammar::Grammar)
-    dmap0 = Int[isterminal(grammar,i) ? 0 : typemax(Int)/2 for i in eachindex(grammar.rules)]
+    dmap0 = Int[isterminal(grammar,i) ? 1 : typemax(Int)/2 for i in eachindex(grammar.rules)]
     dmap1 = fill(-1, length(grammar.rules)) 
     while dmap0 != dmap1
         for i in eachindex(grammar.rules)
@@ -20,23 +24,34 @@ end
 
 
 function _mindepth(grammar::Grammar, rule_index::Int, dmap::AbstractVector{Int})
-    isterminal(grammar, rule_index) && return 0
+    isterminal(grammar, rule_index) && return 1
     return 1 + maximum([mindepth(grammar, ctyp, dmap) for ctyp in child_types(grammar, rule_index)])
 end
 
 
 """
-Returns the minimum depth achievable for a given nonterminal symbol
+    mindepth(grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int})
+
+Returns the minimum depth achievable for a given nonterminal symbol.
+The minimum depth is the depth of the lowest tree that can be made using `typ` 
+as a start symbol. `dmap` can be obtained from [`mindepth_map`](@ref).
 """
 function mindepth(grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int})
     return minimum(dmap[grammar.bytype[typ]])
 end
 
+"""
+    SymbolTable
+
+Data structure for mapping terminal symbols in the [`Grammar`](@ref) to their Julia interpretation.
+"""
 const SymbolTable = Dict{Symbol,Any}
 
 """
-Returns a symbol table populated with mapping from symbols in grammar to
-symbols in module mod or Main, if defined.
+    SymbolTable(grammar::Grammar, mod::Module=Main)
+
+Returns a [`SymbolTable`](@ref) populated with a mapping from symbols in the 
+[`Grammar`](@ref) to symbols in module `mod` or `Main`, if defined.
 """
 function HerbGrammar.SymbolTable(grammar::Grammar, mod::Module=Main)
     tab = SymbolTable()
@@ -81,7 +96,9 @@ end
 
 
 """
-Checks if elements of vec1 are contained in vec2 in the same order (possibly with elements in between)
+    containedin(vec1::Vector, vec2::Vector)
+
+Checks if elements of `vec1` are contained in `vec2` in the same order (possibly with elements in between)
 """
 function containedin(vec1::Vector, vec2::Vector)
 	max_elements = length(vec1)
@@ -101,7 +118,9 @@ end
 
 
 """
-Checks if vec1 is a subsequence of vec2
+    subsequenceof(vec1::Vector{Int}, vec2::Vector{Int})
+
+Checks if `vec1` is a subsequence of `vec2`.
 """
 function subsequenceof(vec1::Vector{Int}, vec2::Vector{Int})
     vec1_index = 1
@@ -130,8 +149,10 @@ end
 
 
 """
-Returns true if the node has children
-"""
-has_children(rule::RuleNode) = !isempty(rule.children)
+    has_children(node::RuleNode)
 
+Returns true if `node` has children
+"""
+has_children(node::RuleNode) = !isempty(node.children)
+has_children(::Hole) = false
 

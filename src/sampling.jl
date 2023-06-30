@@ -8,32 +8,17 @@ using StatsBase
 
 Generates a random RuleNode of return type typ and maximum depth max_depth.
 """
-function Base.rand(::Type{RuleNode}, grammar::Grammar, typ::Symbol, max_depth::Int=10, 
-    bin::Union{NodeRecycler,Nothing}=nothing)
+function Base.rand(::Type{RuleNode}, grammar::Grammar, typ::Symbol, max_depth::Int=10)
     dmap = mindepth_map(grammar)
     return rand(RuleNode, grammar, typ, dmap, max_depth)
 end
-
-"""
-    rand(::Type{RuleNode}, grammar::Grammar, max_depth::Int=10)
-
-Generates a random RuleNode with any type and maximum depth max_depth.
-"""
-function Base.rand(::Type{RuleNode}, grammar::Grammar, max_depth::Int=10, 
-    bin::Union{NodeRecycler,Nothing}=nothing)
-    dmap = mindepth_map(grammar)
-    random_start_symbol = StatsBase.sample(grammar.types)
-    return rand(RuleNode, grammar, random_start_symbol, dmap, max_depth)
-end
-
-
 """
     rand(::Type{RuleNode}, grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int}, max_depth::Int=10)
 
 Generates a random RuleNode of return type typ and maximum depth max_depth guided by a minimum depth map dmap.
 """
 function Base.rand(::Type{RuleNode}, grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int}, 
-    max_depth::Int=10, bin::Union{NodeRecycler,Nothing}=nothing)
+    max_depth::Int=10)
     rules = grammar[typ]
     filtered = filter(r->dmap[r] ≤ max_depth, rules)
     if isempty(filtered)
@@ -45,12 +30,12 @@ function Base.rand(::Type{RuleNode}, grammar::Grammar, typ::Symbol, dmap::Abstra
     @assert max_depth >= 0
 
     rulenode = iseval(grammar, rule_index) ?
-        RuleNode(bin, rule_index, Core.eval(grammar, rule_index)) :
-        RuleNode(bin, rule_index)
+        RuleNode(rule_index, Core.eval(grammar, rule_index)) :
+        RuleNode(rule_index)
 
     if !grammar.isterminal[rule_index]
         for ch in child_types(grammar, rule_index)
-            push!(rulenode.children, rand(RuleNode, grammar, ch, dmap, max_depth-1, bin))
+            push!(rulenode.children, rand(RuleNode, grammar, ch, dmap, max_depth-1))
         end
     end
     return rulenode

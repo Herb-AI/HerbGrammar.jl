@@ -1,5 +1,7 @@
 """
-Writes a context-free grammar to the file provided by `filepath`.
+    store_cfg(filepath::AbstractString, grammar::ContextFreeGrammar)
+
+Writes a [`ContextFreeGrammar`](@ref) to the file provided by `filepath`.
 """
 function store_cfg(filepath::AbstractString, grammar::ContextFreeGrammar)
     open(filepath, write=true) do file
@@ -15,9 +17,15 @@ function store_cfg(filepath::AbstractString, grammar::ContextFreeGrammar)
     end
 end
 
+
 """
-Reads a CFG from a file provided in `filepath`.
-Do not open any untrusted grammars.
+    read_cfg(filepath::AbstractString)::ContextFreeGrammar
+
+Reads a [`ContextFreeGrammar`](@ref) from the file provided in `filepath`.
+
+!!! danger
+    Only open trusted grammars. 
+    Parts of the grammar can be passed to Julia's `eval` function.  
 """
 function read_cfg(filepath::AbstractString)::ContextFreeGrammar
     # Read the contents of the file into a string
@@ -33,8 +41,13 @@ function read_cfg(filepath::AbstractString)::ContextFreeGrammar
 end
 
 """
-Reads a probabilistic CFG from a file provided in `filepath`.
-Do not open any untrusted grammars.
+    read_pcfg(filepath::AbstractString)::ContextFreeGrammar
+
+Reads a probabilistic [`ContextFreeGrammar`](@ref) from a file provided in `filepath`.
+
+!!! danger
+    Only open trusted grammars. 
+    Parts of the grammar can be passed to Julia's `eval` function.  
 """
 function read_pcfg(filepath::AbstractString)::ContextFreeGrammar
     # Read the contents of the file into a string
@@ -50,25 +63,32 @@ function read_pcfg(filepath::AbstractString)::ContextFreeGrammar
 end
 
 """
-Writes a context-sensitive grammar to the files at `grammarpath` and `constraintspath`.
-The `grammarpath` file will contain a CFG definition, and the
-`constraintspath` file will contain the constraints of the CSG.
+    store_csg(grammarpath::AbstractString, constraintspath::AbstractString, g::ContextSensitiveGrammar)
+
+Writes a [`ContextSensitiveGrammar`](@ref) to the files at `grammarpath` and `constraintspath`.
+The `grammarpath` file will contain a [`ContextSensitiveGrammar`](@ref) definition, and the
+`constraintspath` file will contain the [`Constraint`](@ref)s of the [`ContextSensitiveGrammar`](@ref).
 """
-function store_csg(grammarpath::AbstractString, constraintspath::AbstractString, grammar::ContextSensitiveGrammar)
+function store_csg(grammarpath::AbstractString, constraintspath::AbstractString, g::ContextSensitiveGrammar)
     # Store grammar as CFG
-    store_cfg(grammarpath, ContextFreeGrammar(grammar.rules, grammar.types, 
-        grammar.isterminal, grammar.iseval, grammar.bytype, grammar.childtypes, grammar.log_probabilities))
+    store_cfg(grammarpath, ContextFreeGrammar(g.rules, g.types, 
+        g.isterminal, g.iseval, g.bytype, g.domains, g.childtypes, g.log_probabilities))
     
     # Store constraints separately
     open(constraintspath, write=true) do file
-        serialize(file, grammar.constraints)
+        serialize(file, g.constraints)
     end
 end
 
 """
-Reads a CSG from the files at `grammarpath` and `constraintspath`.
-The grammar path may also point to a CFG.
-Do not open any untrusted grammars.
+    read_csg(grammarpath::AbstractString, constraintspath::AbstractString)::ContextSensitiveGrammar
+
+Reads a [`ContextSensitiveGrammar`](@ref) from the files at `grammarpath` and `constraintspath`.
+The grammar path may also point to a [`ContextFreeGrammar`](@ref).
+
+!!! danger
+    Only open trusted grammars. 
+    Parts of the grammar can be passed to Julia's `eval` function.  
 """
 function read_csg(grammarpath::AbstractString, constraintspath::AbstractString)::ContextSensitiveGrammar
     g = read_cfg(grammarpath)
@@ -77,13 +97,18 @@ function read_csg(grammarpath::AbstractString, constraintspath::AbstractString):
     close(file)
 
     return ContextSensitiveGrammar(g.rules, g.types, g.isterminal, 
-        g.iseval, g.bytype, g.childtypes, g.log_probabilities, constraints)
+        g.iseval, g.bytype, g.domains, g.childtypes, g.log_probabilities, constraints)
 end
 
 """
-Reads a probabilistic CSG from the files at `grammarpath` and `constraintspath`.
-The grammar path may also point to a CFG.
-Do not open any untrusted grammars.
+    read_pcsg(grammarpath::AbstractString, constraintspath::AbstractString)::ContextSensitiveGrammar
+
+Reads a probabilistic [`ContextSensitiveGrammar`](@ref) from the files at `grammarpath` and `constraintspath`.
+The grammar path may also point to a [`ContextFreeGrammar`](@ref).
+
+!!! danger
+    Only open trusted grammars. 
+    Parts of the grammar can be passed to Julia's `eval` function.  
 """
 function read_pcsg(grammarpath::AbstractString, constraintspath::AbstractString)::ContextSensitiveGrammar
     g = read_pcfg(grammarpath)
@@ -92,7 +117,7 @@ function read_pcsg(grammarpath::AbstractString, constraintspath::AbstractString)
     close(file)
 
     return ContextSensitiveGrammar(g.rules, g.types, g.isterminal, 
-        g.iseval, g.bytype, g.childtypes, g.log_probabilities, constraints)
+        g.iseval, g.bytype, g.domains, g.childtypes, g.log_probabilities, constraints)
 end
 
 
