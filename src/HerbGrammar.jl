@@ -29,7 +29,6 @@ export
 
     ContextFreeGrammar,
 
-    Constraint,
     ContextSensitiveGrammar,
     AbstractRuleNode,
     RuleNode,
