@@ -45,7 +45,6 @@ mutable struct RuleNodeAndCount
     node::RuleNode
     cnt::Int
 end
-
 """
     sample(root::RuleNode, typ::Symbol, grammar::Grammar, maxdepth::Int=typemax(Int))
 

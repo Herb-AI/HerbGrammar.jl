@@ -6,7 +6,7 @@ using StatsBase
 using DataStructures # NodeRecycler
 using Serialization # grammar_io
 
-using ..HerbCore
+using HerbCore
 
 include("grammar_base.jl")
 include("rulenode_operators.jl")
