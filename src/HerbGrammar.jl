@@ -12,7 +12,6 @@ include("grammar_base.jl")
 include("rulenode_operators.jl")
 include("utils.jl")
 include("nodelocation.jl")
-include("sampling.jl")
 
 
 include("cfg/cfg.jl")
@@ -42,7 +41,6 @@ export
     expr2cfgrammar,
     max_arity,
     isterminal,
-    sample,
     iseval,
     log_probability,
     probability,
@@ -81,7 +79,6 @@ export
     containedin,
     subsequenceof,
     has_children,
-
     store_cfg,
     read_cfg,
     read_pcfg,
