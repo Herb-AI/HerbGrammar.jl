@@ -118,9 +118,13 @@ parse_rule!(v::Vector{Any}, r) = push!(v, r)
 
 function parse_rule!(v::Vector{Any}, ex::Expr)
     if ex.head == :call && ex.args[1] == :|
-        terms = length(ex.args) == 2 ?
-        collect(ex.args[2].args[2]:ex.args[2].args[3]) :    #|(a:c) case
-        ex.args[2:end]                 #a|b|c case
+        if length(ex.args) == 2 && ex.args[2].args[1] == :(:)
+            terms = collect(ex.args[2].args[2]:ex.args[2].args[3])  #|(a:c) case
+        elseif length(ex.args) == 2 && ex.args[2].args[1] != :(:)
+            terms = eval(ex.args[2])  # :([1,2,3]) case
+        else
+            terms = ex.args[2:end]  #a|b|c case
+        end
         for t in terms
             parse_rule!(v, t)
         end
