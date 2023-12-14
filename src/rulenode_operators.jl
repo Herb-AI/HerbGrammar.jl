@@ -201,7 +201,7 @@ function _rulenode2expr(expr::Expr, rulenode::RuleNode, grammar::Grammar, j=0)
 		elseif haskey(grammar.bytype, arg)
 			child = rulenode.children[j+=1]
 			if isa(child, Hole)
-        expr.args[k] = _rulenode2expr(child, grammar)
+        		expr.args[k] = _rulenode2expr(child, grammar)
 				continue
 			end
 			expr.args[k] = (child._val !== nothing) ?
