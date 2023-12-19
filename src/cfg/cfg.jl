@@ -117,6 +117,9 @@ end
 parse_rule!(v::Vector{Any}, r) = push!(v, r)
 
 function parse_rule!(v::Vector{Any}, ex::Expr)
+    # Strips `LineNumberNode`s from the expression
+    Base.remove_linenums!(ex)
+
     if ex.head == :call && ex.args[1] == :|	
         terms = _expand_shorthand(ex.args)
 
