@@ -187,12 +187,23 @@ function rulenode2expr(rulenode::RuleNode, grammar::Grammar)
 end
 
 
+function _rulenode2expr(rulenode::Hole, grammar::Grammar)
+    # Find the index of the first element that is true
+    index = findfirst(==(true), rulenode.domain)
+    return isnothing(index) ? :Nothing : grammar.types[index]
+end
+rulenode2expr(rulenode::Hole, grammar::Grammar) = _rulenode2expr(rulenode::Hole, grammar::Grammar)
+
 function _rulenode2expr(expr::Expr, rulenode::RuleNode, grammar::Grammar, j=0)
 	for (k,arg) in enumerate(expr.args)
 		if isa(arg, Expr)
 			expr.args[k],j = _rulenode2expr(arg, rulenode, grammar, j)
 		elseif haskey(grammar.bytype, arg)
 			child = rulenode.children[j+=1]
+			if isa(child, Hole)
+        		expr.args[k] = _rulenode2expr(child, grammar)
+				continue
+			end
 			expr.args[k] = (child._val !== nothing) ?
 				child._val : deepcopy(grammar.rules[child.ind])
 			if !isterminal(grammar, child)

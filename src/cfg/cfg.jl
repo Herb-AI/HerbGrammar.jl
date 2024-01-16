@@ -117,14 +117,39 @@ end
 parse_rule!(v::Vector{Any}, r) = push!(v, r)
 
 function parse_rule!(v::Vector{Any}, ex::Expr)
-	if ex.head == :call && ex.args[1] == :|
-		terms = length(ex.args) == 2 ?
-		collect(eval(ex.args[2])) :    #|(a:c) case
-		ex.args[2:end]                 #a|b|c case
-		for t in terms
-			parse_rule!(v, t)
+    # Strips `LineNumberNode`s from the expression
+    Base.remove_linenums!(ex)
+
+    if ex.head == :call && ex.args[1] == :|	
+        terms = _expand_shorthand(ex.args)
+
+        for t in terms
+            parse_rule!(v, t)
+        end
+    else
+        push!(v, ex)
+    end
+end
+
+function _expand_shorthand(args::Vector{Any})
+	# expand a rule using the `|` symbol:
+	# `X = |(1:3)`, `X = 1|2|3`, `X = |([1,2,3])`
+	# these should all be equivalent and should expand to
+	# the following 3 rules: `X = 1`, `X = 2`, and `X = 3`
+	if args[1] != :|
+		throw(ArgumentError("Tried to parse: $ex as a shorthand rule, but it is not a shorthand rule."))
+	end
+
+	if length(args) == 2
+		to_expand = args[2]
+		if to_expand.args[1] == :(:)
+			expanded = collect(to_expand.args[2]:to_expand.args[3])	# (1:3) case
+		else
+			expanded = to_expand.args								# ([1,2,3]) case
 		end
+	elseif length(args) == 3
+		expanded = args[2:end]										# 1|2|3 case
 	else
-		push!(v, ex)
+		throw(ArgumentError("Failed to parse shorthand for rule: $ex"))
 	end
 end
