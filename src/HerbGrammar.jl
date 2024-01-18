@@ -21,8 +21,6 @@ export
     ContextFree, 
     ContextSensitive,
 
-#    ContextFreeGrammar,
-
     ContextSensitiveGrammar,
     AbstractRuleNode,
     RuleNode,
@@ -32,7 +30,6 @@ export
     ProbabilisticCFG,
 
     @cfgrammar,
-#    expr2cfgrammar,
     max_arity,
     isterminal,
     iseval,
@@ -52,13 +49,11 @@ export
 
     @csgrammar,
     expr2csgrammar,
-#    cfg2csg,
     clearconstraints!,
     addconstraint!,
     merge_grammars!,
 
     @pcfgrammar,
-#    expr2pcfgrammar,
 
     @pcsgrammar,
     expr2pcsgrammar,
