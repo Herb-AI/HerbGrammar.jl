@@ -293,7 +293,7 @@ nchildren(grammar::Grammar, node::RuleNode)::Int = length(child_types(grammar, n
 """
 	isvariable(grammar::Grammar, node::RuleNode)::Bool
 
-Return true if the rule used by `node` represents a variable.
+Return true if the rule used by `node` represents a variable in a program (essentially, an input to the program)
 """
 isvariable(grammar::Grammar, node::RuleNode)::Bool = (
     grammar.isterminal[node.ind] &&
