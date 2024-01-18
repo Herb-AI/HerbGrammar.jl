@@ -1,9 +1,9 @@
 """
-    store_cfg(filepath::AbstractString, grammar::ContextFreeGrammar)
+    store_cfg(filepath::AbstractString, grammar::ContextSensitiveGrammar)
 
-Writes a [`ContextFreeGrammar`](@ref) to the file provided by `filepath`.
+Writes the context free part of a [`ContextSensitiveGrammar`](@ref) to the file provided by `filepath`.
 """
-function store_cfg(filepath::AbstractString, grammar::ContextFreeGrammar)
+function store_cfg(filepath::AbstractString, grammar::ContextSensitiveGrammar)
     open(filepath, write=true) do file
         if !isprobabilistic(grammar)
             for (type, rule) ∈ zip(grammar.types, grammar.rules)
@@ -19,15 +19,15 @@ end
 
 
 """
-    read_cfg(filepath::AbstractString)::ContextFreeGrammar
+    read_cfg(filepath::AbstractString)::ContextSensitiveGrammar
 
-Reads a [`ContextFreeGrammar`](@ref) from the file provided in `filepath`.
+Reads the context free part of a [`ContextSensitiveGrammar`](@ref) from the file provided in `filepath`.
 
 !!! danger
     Only open trusted grammars. 
     Parts of the grammar can be passed to Julia's `eval` function.  
 """
-function read_cfg(filepath::AbstractString)::ContextFreeGrammar
+function read_cfg(filepath::AbstractString)::ContextSensitiveGrammar
     # Read the contents of the file into a string
     file = open(filepath)
     program::AbstractString = read(file, String)
@@ -37,19 +37,19 @@ function read_cfg(filepath::AbstractString)::ContextFreeGrammar
     ex::Expr = Meta.parse("begin $program end")
 
     # Convert the expression to a context-free grammar
-    return expr2cfgrammar(ex)
+    return expr2csgrammar(ex)
 end
 
 """
-    read_pcfg(filepath::AbstractString)::ContextFreeGrammar
+    read_pcfg(filepath::AbstractString)::ContextSensitiveGrammar
 
-Reads a probabilistic [`ContextFreeGrammar`](@ref) from a file provided in `filepath`.
+Reads the context free part of a probabilistic [`ContextSensitiveGrammar`](@ref) from a file provided in `filepath`.
 
 !!! danger
     Only open trusted grammars. 
     Parts of the grammar can be passed to Julia's `eval` function.  
 """
-function read_pcfg(filepath::AbstractString)::ContextFreeGrammar
+function read_pcfg(filepath::AbstractString)::ContextSensitiveGrammar
     # Read the contents of the file into a string
     file = open(filepath)
     program::AbstractString = read(file, String)
@@ -59,7 +59,7 @@ function read_pcfg(filepath::AbstractString)::ContextFreeGrammar
     ex::Expr = Meta.parse("begin $program end")
 
     # Convert the expression to a context-free grammar
-    return expr2pcfgrammar(ex)
+    return expr2pcsgrammar(ex)
 end
 
 """
@@ -71,8 +71,7 @@ The `grammarpath` file will contain a [`ContextSensitiveGrammar`](@ref) definiti
 """
 function store_csg(grammarpath::AbstractString, constraintspath::AbstractString, g::ContextSensitiveGrammar)
     # Store grammar as CFG
-    store_cfg(grammarpath, ContextFreeGrammar(g.rules, g.types, 
-        g.isterminal, g.iseval, g.bytype, g.domains, g.childtypes, g.log_probabilities))
+    store_cfg(grammarpath, g)
     
     # Store constraints separately
     open(constraintspath, write=true) do file
@@ -84,7 +83,6 @@ end
     read_csg(grammarpath::AbstractString, constraintspath::AbstractString)::ContextSensitiveGrammar
 
 Reads a [`ContextSensitiveGrammar`](@ref) from the files at `grammarpath` and `constraintspath`.
-The grammar path may also point to a [`ContextFreeGrammar`](@ref).
 
 !!! danger
     Only open trusted grammars. 
@@ -104,7 +102,6 @@ end
     read_pcsg(grammarpath::AbstractString, constraintspath::AbstractString)::ContextSensitiveGrammar
 
 Reads a probabilistic [`ContextSensitiveGrammar`](@ref) from the files at `grammarpath` and `constraintspath`.
-The grammar path may also point to a [`ContextFreeGrammar`](@ref).
 
 !!! danger
     Only open trusted grammars. 
