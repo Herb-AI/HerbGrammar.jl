@@ -205,7 +205,7 @@ The syntax is identical to the syntax of [`@csgrammar`](@ref) and [`@cfgrammar`]
 	Calls to this function are ignored if a rule is already in the grammar.
 """
 function add_rule!(g::Grammar, e::Expr)
-	if e.head == :(=)
+	if e.head == :(=) && typeof(e.args[1]) == Symbol
 		s = e.args[1]		# Name of return type
 		rule = e.args[2]	# expression?
 		rvec = Any[]
@@ -219,6 +219,8 @@ function add_rule!(g::Grammar, e::Expr)
 			push!(g.types, s)
 			g.bytype[s] = push!(get(g.bytype, s, Int[]), length(g.rules))
 		end
+	else
+		throw(ArgumentError("Invalid rule: $e. Rules must be of the form `Symbol = Expr`"))
 	end
 	alltypes = collect(keys(g.bytype))
 
