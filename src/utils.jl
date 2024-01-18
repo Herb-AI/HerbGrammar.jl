@@ -78,20 +78,24 @@ function _add_to_symboltable!(tab::SymbolTable, rule::Expr, mod::Module)
     return true
 end
 
+function _apply_if_defined_in_modules(func::Function, s::Symbol, mods::Vector{Module})
+    for mod in mods
+        if isdefined(mod, s)
+            func(mod, s)
+            return true
+        end
+    end
+    return false
+end
+
+function _is_defined_in_modules(s::Symbol, mods::Vector{Module})
+    _apply_if_defined_in_modules((mod, s) -> nothing, s, mods)
+end
 
 function _add_to_symboltable!(tab::SymbolTable, s::Symbol, mod::Module)
-    if isdefined(mod, s)
-        tab[s] = getfield(mod, s)
-        return true
-    elseif isdefined(Base, s)
-        tab[s] = getfield(Base, s)
-        return true
-    elseif isdefined(Main, s)
-        tab[s] = getfield(Main, s)
-        return true
-    else
-        return false
-    end
+    _add_to_table! = (mod, s) -> tab[s] = getfield(mod, s)
+
+    return _apply_if_defined_in_modules(_add_to_table!, s, [mod, Base, Main])
 end
 
 
