@@ -59,6 +59,7 @@ export
     cfg2csg,
     clearconstraints!,
     addconstraint!,
+    merge_grammars!,
 
     @pcfgrammar,
     expr2pcfgrammar,
