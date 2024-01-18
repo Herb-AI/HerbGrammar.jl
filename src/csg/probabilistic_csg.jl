@@ -22,26 +22,16 @@ function expr2pcsgrammar(ex::Expr)::ContextSensitiveGrammar
 	probabilities = Real[]
 	bytype = Dict{Symbol,Vector{Int}}()
 	for e ∈ ex.args
-		if e isa Expr
-			if e.head == :(=)
-				left = e.args[1] 		# name of return type and probability
-				if left isa Expr && left.head == :call && left.args[1] == :(:)
-					p = left.args[2] 			# Probability
-					s = left.args[3]			# Return type
-					rule = e.args[2].args[2] 	# extract rule from block expr
-
-					rvec = Any[]
-					parse_rule!(rvec, rule)
-					for r ∈ rvec
-						push!(rules, r)
-						push!(types, s)
-						# Divide the probability of this line by the number of rules it defines. 
-						push!(probabilities, p / length(rvec))
-						bytype[s] = push!(get(bytype, s, Int[]), length(rules))
-					end
-				else
-					@error "Rule without probability encountered in probabilistic grammar. Rule ignored."
-				end
+		if e isa Expr 
+			maybe_rules = parse_probabilistic_rule(e)
+			isnothing(maybe_rules) && continue 	# if rules is nothing, skip
+			s, prvec = maybe_rules
+			
+			for (p, r) ∈ prvec
+				push!(rules, r)
+				push!(types, s)
+				push!(probabilities, p)
+				bytype[s] = push!(get(bytype, s, Int[]), length(rules))
 			end
 		end
 	end
@@ -62,7 +52,59 @@ function expr2pcsgrammar(ex::Expr)::ContextSensitiveGrammar
 	is_eval = [iseval(rule) for rule in rules]
 	childtypes = [get_childtypes(rule, alltypes) for rule in rules]
 	domains = Dict(type => BitArray(r ∈ bytype[type] for r ∈ 1:length(rules)) for type ∈ alltypes)
-	return ContextSensitiveGrammar(rules, types, is_terminal, is_eval, bytype, domains, childtypes, log_probabilities)
+	
+	normalize!(ContextSensitiveGrammar(rules, types, is_terminal, is_eval, bytype, domains, childtypes, log_probabilities))
+end
+
+"""
+Parses a single (potentially shorthand) derivation rule of a probabilistic [`ContextSensitiveGrammar`](@ref).
+Returns `nothing` if the rule is not probabilistic, otherwise a `Tuple` of its type and a 
+`Vector` of probability-rule pairs it expands into.
+"""
+function parse_probabilistic_rule(e::Expr)::Union{Nothing, Tuple{Symbol, Vector{Tuple{Real, Any}}}}
+	prvec = Tuple{Real, Any}[]
+	if e.head == :(=)
+		left = e.args[1]		# name of return type and probability
+		if left isa Expr && left.head == :call && left.args[1] == :(:)
+			p = left.args[2] 			# Probability
+			s = left.args[3]			# Return type
+			rule = e.args[2].args[2] 	# extract rule from block expr
+
+			rvec = Any[]
+			parse_rule!(rvec, rule)
+			for r ∈ rvec
+				# Divide the probability of this line by the number of rules it defines.
+				push!(prvec, (p / length(rvec), r))
+			end
+
+			return s, prvec
+		else
+			@error "Rule without probability encountered in probabilistic grammar. Rule ignored."
+			return nothing
+		end
+	end
+end
+
+
+"""
+A function for normalizing the probabilities of a probabilistic [`ContextSensitiveGrammar`](@ref).
+If the optional `type` argument is provided, only the rules of that type are normalized.
+"""
+function normalize!(g::ContextSensitiveGrammar, type::Union{Symbol, Nothing}=nothing)
+	probabilities = map(exp, g.log_probabilities)
+	types = isnothing(type) ? keys(g.bytype) : [type]
+
+	for t ∈ types
+		total_prob = sum(probabilities[i] for i ∈ g.bytype[t])
+		if !(total_prob ≈ 1)
+			for i ∈ g.bytype[t]
+				probabilities[i] /= total_prob
+			end
+		end
+	end
+	
+	g.log_probabilities = map(log, probabilities)
+	return g
 end
 
 """
