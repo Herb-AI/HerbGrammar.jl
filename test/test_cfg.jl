@@ -51,6 +51,7 @@
         @test g₂.rules[g₂.bytype[:Bool][1]] == :(Real ≤ Real)
         @test g₂.childtypes[g₂.bytype[:Bool][1]] == [:Real, :Real]
 
+        @test_throws ArgumentError add_rule!(g₂, :(Real != Bool))
     end
 
     @testset "Merging two grammars" begin
