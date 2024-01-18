@@ -132,3 +132,18 @@ clearconstraints!(grammar::ContextSensitiveGrammar) = empty!(grammar.constraints
 function Base.display(rulenode::RuleNode, grammar::ContextSensitiveGrammar)
 	return rulenode2expr(rulenode, grammar)
 end
+
+"""
+	merge_grammars!(merge_to::Grammar, merge_from::Grammar)
+
+Adds all rules and constraints from `merge_from` to `merge_to`.
+"""
+function merge_grammars!(merge_to::Grammar, merge_from::Grammar)
+	for i in eachindex(merge_from.rules)
+		expression = :($(merge_from.types[i]) = $(merge_from.rules[i]))
+		add_rule!(merge_to, expression)
+	end
+	for i in eachindex(merge_from.constraints)
+		addconstraint!(merge_to, merge_from.constraints[i])
+	end
+end

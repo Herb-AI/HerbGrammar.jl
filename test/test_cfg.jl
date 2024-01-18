@@ -1,5 +1,5 @@
 @testset verbose=true "CFGs" begin
-    @testset "creating grammars" begin
+    @testset "Creating grammars" begin
         g₁ = @cfgrammar begin
             Real = |(1:9)
         end
@@ -18,7 +18,7 @@
     end
 
 
-    @testset "adding rules to grammar" begin
+    @testset "Adding rules to grammar" begin
         g₁ = @cfgrammar begin
             Real = |(1:2)
         end
@@ -53,6 +53,22 @@
 
     end
 
+    @testset "Merging two grammars" begin
+        g₁ = @csgrammar begin
+            Number = |(1:2)
+            Number = x
+        end
+
+        g₂ = @csgrammar begin
+            Real = Real + Real
+            Real = Real * Real
+        end
+
+        merge_grammars!(g₁, g₂)
+
+        @test length(g₁.rules) == 5
+        @test :Real ∈ g₁.types
+    end
 
     @testset "Writing and loading CFG to/from disk" begin
         g₁ = @cfgrammar begin
