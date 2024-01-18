@@ -234,6 +234,18 @@ function add_rule!(g::Grammar, e::Expr)
 	return g
 end
 
+"""
+Adds a probabilistic derivation rule.
+"""
+function add_rule!(g::Grammar, p::Real, e::Expr)
+	isprobabilistic(g) || throw(ArgumentError("adding a probabilistic rule to a non-probabilistic grammar"))
+	len₀ = length(g.rules)
+	add_rule!(g, e)
+	len₁ = length(g.rules)
+	nnew = len₁ - len₀
+	append!(g.log_probabilities, repeat([log(p / nnew)], nnew))
+	normalize!(g)
+end
 
 """
 	remove_rule!(g::Grammar, idx::Int)
