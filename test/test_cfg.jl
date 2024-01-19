@@ -103,4 +103,28 @@
         rm("toy_pcfg.grammar")
     end
 
+    @testset "Test that strict equality is used during rule creation" begin
+        g₁ = @csgrammar begin
+            R = x
+            R = R + R
+        end
+
+        add_rule!(g₁, :(R = 1 | 2))
+
+        add_rule!(g₁,:(Bool = true))
+
+        @test all(g₁.rules .== [:x, :(R + R), 1, 2, true])
+
+        g₁ = @csgrammar begin
+            R = x
+            R = R + R
+        end
+
+        add_rule!(g₁,:(Bool = true))
+
+        add_rule!(g₁, :(R = 1 | 2))
+
+        @test all(g₁.rules .== [:x, :(R + R), true, 1, 2])
+    end
+
 end
