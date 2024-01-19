@@ -1,17 +1,17 @@
 @testset verbose=true "CSGs" begin
     @testset "Creating grammars" begin
-        g₁ = @csgrammar begin
+        g₁ = @cfgrammar begin
             Real = |(1:9)
         end
         @test g₁.rules == collect(1:9)
         @test :Real ∈ g₁.types
 
-        g₂ = @csgrammar begin
+        g₂ = @cfgrammar begin
             Real = |([1,2,3])
         end
         @test g₂.rules == [1,2,3]
 
-        g₃ = @csgrammar begin
+        g₃ = @cfgrammar begin
             Real = 1 | 2 | 3
         end
         @test g₃.rules == [1,2,3]
