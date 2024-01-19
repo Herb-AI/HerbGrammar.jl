@@ -293,12 +293,48 @@ nchildren(grammar::Grammar, node::RuleNode)::Int = length(child_types(grammar, n
 """
 	isvariable(grammar::Grammar, node::RuleNode)::Bool
 
-Returns true if the rule used by `node` represents a variable.
+Return true if the rule used by `node` represents a variable in a program (essentially, an input to the program)
 """
-isvariable(grammar::Grammar, node::RuleNode)::Bool = grammar.isterminal[node.ind] && grammar.rules[node.ind] isa Symbol
+isvariable(grammar::Grammar, node::RuleNode)::Bool = (
+    grammar.isterminal[node.ind] &&
+    grammar.rules[node.ind] isa Symbol &&
+    !_is_defined_in_modules(grammar.rules[node.ind], [Main, Base])
+)
+"""
+	isvariable(grammar::Grammar, node::RuleNode, mod::Module)::Bool
 
-isvariable(grammar::Grammar, ind::Int)::Bool = grammar.isterminal[ind] && grammar.rules[ind] isa Symbol
+Return true if the rule used by `node` represents a variable.
+	
+Taking into account the symbols defined in the given module(s).
+"""
+isvariable(grammar::Grammar, node::RuleNode, mod::Module...)::Bool = (
+	grammar.isterminal[node.ind] &&
+	grammar.rules[node.ind] isa Symbol &&
+	!_is_defined_in_modules(grammar.rules[node.ind], [mod..., Main, Base])
+)
 
+"""
+	isvariable(grammar::Grammar, ind::Int)::Bool
+
+Return true if the rule with index `ind` represents a variable.
+"""
+isvariable(grammar::Grammar, ind::Int)::Bool = (
+	grammar.isterminal[ind] &&
+	grammar.rules[ind] isa Symbol &&
+	!_is_defined_in_modules(grammar.rules[ind], [Main, Base])
+)
+"""
+	isvariable(grammar::Grammar, ind::Int, mod::Module)::Bool
+
+Return true if the rule with index `ind` represents a variable.
+	
+Taking into account the symbols defined in the given module(s).
+"""
+isvariable(grammar::Grammar, ind::Int, mod::Module...)::Bool = (
+	grammar.isterminal[ind] &&
+	grammar.rules[ind] isa Symbol &&
+	!_is_defined_in_modules(grammar.rules[ind], [mod..., Main, Base])
+)
 
 """
 	contains_returntype(node::RuleNode, grammar::Grammar, sym::Symbol, maxdepth::Int=typemax(Int))
