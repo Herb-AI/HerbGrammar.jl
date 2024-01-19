@@ -1,17 +1,17 @@
-@testset verbose=true "CFGs" begin
+@testset verbose=true "CSGs" begin
     @testset "Creating grammars" begin
-        g₁ = @cfgrammar begin
+        g₁ = @csgrammar begin
             Real = |(1:9)
         end
         @test g₁.rules == collect(1:9)
         @test :Real ∈ g₁.types
 
-        g₂ = @cfgrammar begin
+        g₂ = @csgrammar begin
             Real = |([1,2,3])
         end
         @test g₂.rules == [1,2,3]
 
-        g₃ = @cfgrammar begin
+        g₃ = @csgrammar begin
             Real = 1 | 2 | 3
         end
         @test g₃.rules == [1,2,3]
@@ -19,7 +19,7 @@
 
 
     @testset "Adding rules to grammar" begin
-        g₁ = @cfgrammar begin
+        g₁ = @csgrammar begin
             Real = |(1:2)
         end
 
@@ -40,7 +40,7 @@
         @test g₁.rules == collect(1:9)
 
         # Adding other types
-        g₂ = @cfgrammar begin
+        g₂ = @csgrammar begin
             Real = 1 | 2 | 3
         end
 
@@ -71,14 +71,14 @@
         @test :Real ∈ g₁.types
     end
 
-    @testset "Writing and loading CFG to/from disk" begin
-        g₁ = @cfgrammar begin
+    @testset "Writing and loading CSG to/from disk" begin
+        g₁ = @csgrammar begin
             Real = |(1:5)
             Real = 6 | 7 | 8
         end
         
-        store_cfg("toy_cfg.grammar", g₁)
-        g₂ = read_cfg("toy_cfg.grammar")
+        store_csg(g₁, "toy_cfg.grammar")
+        g₂ = read_csg("toy_cfg.grammar")
         @test :Real ∈ g₂.types
         @test g₂.rules == collect(1:8)
 
@@ -86,14 +86,14 @@
         rm("toy_cfg.grammar")
     end
 
-    @testset "Writing and loading probabilistic CFG to/from disk" begin
-        g₁ = @pcfgrammar begin
+    @testset "Writing and loading probabilistic CSG to/from disk" begin
+        g₁ = @pcsgrammar begin
             0.5 : Real = |(0:3)
             0.5 : Real = x
         end
         
-        store_cfg("toy_pcfg.grammar", g₁)
-        g₂ = read_pcfg("toy_pcfg.grammar")
+        store_csg(g₁, "toy_pcfg.grammar")
+        g₂ = read_pcsg("toy_pcfg.grammar")
         @test :Real ∈ g₂.types
         @test g₂.rules == [0, 1, 2, 3, :x]
         @test g₂.log_probabilities == g₁.log_probabilities
@@ -103,8 +103,8 @@
         rm("toy_pcfg.grammar")
     end
 
-    @testset "creating probabilistic CFG" begin
-        g = @pcfgrammar begin
+    @testset "creating probabilistic CSG" begin
+        g = @pcsgrammar begin
             0.5 : R = |(0:2)
             0.3 : R = x
             0.2 : B = true | false
@@ -117,8 +117,8 @@
         @test :R ∈ g.types && :B ∈ g.types
     end
 
-    @testset "creating a non-normalized PCFG" begin
-        g = @pcfgrammar begin
+    @testset "creating a non-normalized PCSG" begin
+        g = @pcsgrammar begin
             0.5 : R = |(0:2)
             0.5 : R = x
             0.5 : B = true | false
