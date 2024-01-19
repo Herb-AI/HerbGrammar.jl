@@ -211,13 +211,15 @@ function add_rule!(g::Grammar, e::Expr)
 		rvec = Any[]
 		parse_rule!(rvec, rule)
 		for r ∈ rvec
-			if r ∈ g.rules
-				continue
+			# Only add a rule if it does not exist yet. Check for existance
+			# with strict equality so that true and 1 are not considered
+			# equal. that means we can't use `in` or `∈` for equality checking.
+			if !any(r === rule for rule ∈ g.rules)
+				push!(g.rules, r)
+				push!(g.iseval, iseval(rule))
+				push!(g.types, s)
+				g.bytype[s] = push!(get(g.bytype, s, Int[]), length(g.rules))
 			end
-			push!(g.rules, r)
-			push!(g.iseval, iseval(rule))
-			push!(g.types, s)
-			g.bytype[s] = push!(get(g.bytype, s, Int[]), length(g.rules))
 		end
 	end
 	alltypes = collect(keys(g.bytype))
