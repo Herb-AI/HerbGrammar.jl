@@ -27,8 +27,6 @@ export
     Hole,
     NodeLoc,
 
-    ProbabilisticCFG,
-
     @cfgrammar,
     max_arity,
     isterminal,
