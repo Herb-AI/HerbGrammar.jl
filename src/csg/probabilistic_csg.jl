@@ -61,7 +61,7 @@ Parses a single (potentially shorthand) derivation rule of a probabilistic [`Con
 Returns `nothing` if the rule is not probabilistic, otherwise a `Tuple` of its type and a 
 `Vector` of probability-rule pairs it expands into.
 """
-function parse_probabilistic_rule(e::Expr)::Union{Nothing, Tuple{Symbol, Vector{Tuple{Real, Any}}}}
+function parse_probabilistic_rule(e::Expr)
 	prvec = Tuple{Real, Any}[]
 	if e.head == :(=)
 		left = e.args[1]		# name of return type and probability
