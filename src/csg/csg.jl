@@ -15,6 +15,7 @@ Consists of:
   The domain bitvector has bit `i` set to true iff the `i`th rule is of this type.
 - `childtypes::Vector{Vector{Symbol}}`: A list of types of the children for each rule. 
   If a rule is terminal, the corresponding list is empty.
+- `bychildtypes::Vector{BitVector}`: A bitvector of rules that share the same childtypes for each rule
 - `log_probabilities::Union{Vector{Real}, Nothing}`: A list of probabilities for each rule. 
   If the grammar is non-probabilistic, the list can be `nothing`.
 - `constraints::Vector{Constraint}`: A list of constraints that programs in this grammar have to abide.
@@ -30,6 +31,7 @@ mutable struct ContextSensitiveGrammar <: Grammar
 	bytype::Dict{Symbol, Vector{Int}}
 	domains::Dict{Symbol,BitVector}    				
 	childtypes::Vector{Vector{Symbol}}
+	bychildtypes::Vector{BitVector}
 	log_probabilities::Union{Vector{Real}, Nothing}
 	constraints::Vector{Constraint}
 end
@@ -42,8 +44,9 @@ ContextSensitiveGrammar(
 	bytype::Dict{Symbol, Vector{Int}},
 	domains::Dict{Symbol, BitVector},
 	childtypes::Vector{Vector{Symbol}},
+	bychildtypes::Vector{BitVector},
 	log_probabilities::Union{Vector{<:Real}, Nothing}
-) = ContextSensitiveGrammar(rules, types, isterminal, iseval, bytype, domains, childtypes,	log_probabilities, Constraint[])
+) = ContextSensitiveGrammar(rules, types, isterminal, iseval, bytype, domains, childtypes, bychildtypes, log_probabilities, Constraint[])
 
 """
 	expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
@@ -88,7 +91,8 @@ function expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
 	is_eval = [iseval(rule) for rule ∈ rules]
 	childtypes = [get_childtypes(rule, alltypes) for rule ∈ rules]
 	domains = Dict(type => BitArray(r ∈ bytype[type] for r ∈ 1:length(rules)) for type ∈ alltypes)
-	return ContextSensitiveGrammar(rules, types, is_terminal, is_eval, bytype, domains, childtypes, nothing)
+	bychildtypes = [BitVector([childtypes[i1] == childtypes[i2] for i2 ∈ 1:length(rules)]) for i1 ∈ 1:length(rules)]
+	return ContextSensitiveGrammar(rules, types, is_terminal, is_eval, bytype, domains, childtypes, bychildtypes, nothing)
 end
 
 

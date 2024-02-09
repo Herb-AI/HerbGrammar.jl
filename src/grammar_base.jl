@@ -230,6 +230,7 @@ function add_rule!(g::Grammar, e::Expr)
 	# be added that was used as a terminal symbol before.
 	g.isterminal = [isterminal(rule, alltypes) for rule ∈ g.rules]
 	g.childtypes = [get_childtypes(rule, alltypes) for rule ∈ g.rules]
+	g.bychildtypes = [BitVector([g.childtypes[i1] == g.childtypes[i2] for i2 ∈ 1:length(g.rules)]) for i1 ∈ 1:length(g.rules)]
 	g.domains = Dict(type => BitArray(r ∈ g.bytype[type] for r ∈ 1:length(g.rules)) for type ∈ keys(g.bytype))
 	return g
 end
@@ -266,6 +267,7 @@ function remove_rule!(g::Grammar, idx::Int)
 		alltypes = collect(keys(g.bytype))
 		g.isterminal = [isterminal(rule, alltypes) for rule ∈ g.rules]
 		g.childtypes = [get_childtypes(rule, alltypes) for rule ∈ g.rules]
+		g.bychildtypes = [BitVector([g.childtypes[i1] == g.childtypes[i2] for i2 ∈ 1:length(g.rules)]) for i1 ∈ 1:length(g.rules)]
 	end
 	for domain ∈ values(g.domains)
 		domain[idx] = 0
