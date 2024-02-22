@@ -8,7 +8,7 @@
         @test isempty(g.bytype)
         @test isempty(g.domains)
         @test isempty(g.childtypes)
-        @test isempty(g.log_probabilities)
+        @test isnothing(g.log_probabilities)
     end
 
     @testset "Creating grammars" begin
