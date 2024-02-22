@@ -84,9 +84,9 @@ function expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
 		end
 	end
 	alltypes = collect(keys(bytype))
-	is_terminal = [isterminal(rule, alltypes) for rule ∈ rules]
-	is_eval = [iseval(rule) for rule ∈ rules]
-	childtypes = [get_childtypes(rule, alltypes) for rule ∈ rules]
+	is_terminal::Vector{Bool} = [isterminal(rule, alltypes) for rule ∈ rules]
+	is_eval::Vector{Bool} = [iseval(rule) for rule ∈ rules]
+	childtypes::Vector{Vector{Symbol}} = [get_childtypes(rule, alltypes) for rule ∈ rules]
 	domains = Dict(type => BitArray(r ∈ bytype[type] for r ∈ 1:length(rules)) for type ∈ alltypes)
 	return ContextSensitiveGrammar(rules, types, is_terminal, is_eval, bytype, domains, childtypes, nothing)
 end
