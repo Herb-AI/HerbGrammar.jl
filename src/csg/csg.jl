@@ -1,8 +1,8 @@
 """
-	ContextSensitiveGrammar <: Grammar
+	ContextSensitiveGrammar <: AbstractGrammar
 
 Represents a context-sensitive grammar.
-Extends [`Grammar`](@ref) with constraints.
+Extends [`AbstractGrammar`](@ref) with constraints.
 
 Consists of:
 
@@ -21,9 +21,8 @@ Consists of:
 
 Use the [`@csgrammar`](@ref) macro to create a [`ContextSensitiveGrammar`](@ref) object.
 Use the [`@pcsgrammar`](@ref) macro to create a [`ContextSensitiveGrammar`](@ref) object with probabilities.
-For context-free grammars, see [`ContextFreeGrammar`](@ref).
 """
-mutable struct ContextSensitiveGrammar <: Grammar
+mutable struct ContextSensitiveGrammar <: AbstractGrammar
 	rules::Vector{Any}
 	types::Vector{Union{Symbol, Nothing}}
 	isterminal::BitVector
@@ -35,6 +34,16 @@ mutable struct ContextSensitiveGrammar <: Grammar
 	constraints::Vector{Constraint}
 end
 
+ContextSensitiveGrammar(
+	rules::Vector{<:Any},
+	types::Vector{<:Union{Symbol, Nothing}},
+	isterminal::Union{BitVector, Vector{Bool}},
+	iseval::Union{BitVector, Vector{Bool}},
+	bytype::Dict{Symbol, Vector{Int}},
+	domains::Dict{Symbol, BitVector},
+	childtypes::Vector{Vector{Symbol}},
+	log_probabilities::Union{Vector{<:Real}, Nothing}
+) = ContextSensitiveGrammar(rules, types, isterminal, iseval, bytype, domains, childtypes,	log_probabilities, Constraint[])
 
 """
 	expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
@@ -56,7 +65,30 @@ grammar = expr2csgrammar(
 ```
 """
 function expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
-	return cfg2csg(expr2cfgrammar(ex))
+	rules = Any[]
+	types = Symbol[]
+	bytype = Dict{Symbol,Vector{Int}}()
+	for e ∈ ex.args
+		if isa(e, Expr)
+			if e.head == :(=)
+				s = e.args[1] 		# name of return type
+				rule = e.args[2] 	# expression?
+				rvec = Any[]
+				parse_rule!(rvec, rule)
+				for r ∈ rvec
+					push!(rules, r)
+					push!(types, s)
+					bytype[s] = push!(get(bytype, s, Int[]), length(rules))
+				end
+			end
+		end
+	end
+	alltypes = collect(keys(bytype))
+	is_terminal::Vector{Bool} = [isterminal(rule, alltypes) for rule ∈ rules]
+	is_eval::Vector{Bool} = [iseval(rule) for rule ∈ rules]
+	childtypes::Vector{Vector{Symbol}} = [get_childtypes(rule, alltypes) for rule ∈ rules]
+	domains = Dict(type => BitArray(r ∈ bytype[type] for r ∈ 1:length(rules)) for type ∈ alltypes)
+	return ContextSensitiveGrammar(rules, types, is_terminal, is_eval, bytype, domains, childtypes, nothing)
 end
 
 
@@ -91,30 +123,54 @@ end
 
 ### Related:
 
-- [`@cfgrammar`](@ref) uses the same syntax to create [`ContextFreeGrammar`](@ref)s.
 - [`@pcsgrammar`](@ref) uses a similar syntax to create probabilistic [`ContextSensitiveGrammar`](@ref)s.
 """
 macro csgrammar(ex)
 	return expr2csgrammar(ex)
 end
 
-"""
-	cfg2csg(g::ContextFreeGrammar)::ContextSensitiveGrammar
+macro cfgrammar(ex)
+	return expr2csgrammar(ex)
+end
 
-Converts a [`ContextFreeGrammar`](@ref) to a [`ContextSensitiveGrammar`](@ref) without any [`Constraint`](@ref)s.
-"""
-function cfg2csg(g::ContextFreeGrammar)::ContextSensitiveGrammar
-    return ContextSensitiveGrammar(
-        g.rules, 
-        g.types, 
-        g.isterminal, 
-        g.iseval, 
-        g.bytype, 
-		g.domains,
-        g.childtypes, 
-        g.log_probabilities, 
-        []
-    )
+parse_rule!(v::Vector{Any}, r) = push!(v, r)
+
+function parse_rule!(v::Vector{Any}, ex::Expr)
+    # Strips `LineNumberNode`s from the expression
+    Base.remove_linenums!(ex)
+
+    if ex.head == :call && ex.args[1] == :|	
+        terms = _expand_shorthand(ex.args)
+
+        for t in terms
+            parse_rule!(v, t)
+        end
+    else
+        push!(v, ex)
+    end
+end
+
+function _expand_shorthand(args::Vector{Any})
+	# expand a rule using the `|` symbol:
+	# `X = |(1:3)`, `X = 1|2|3`, `X = |([1,2,3])`
+	# these should all be equivalent and should expand to
+	# the following 3 rules: `X = 1`, `X = 2`, and `X = 3`
+	if args[1] != :|
+		throw(ArgumentError("Tried to parse: $ex as a shorthand rule, but it is not a shorthand rule."))
+	end
+
+	if length(args) == 2
+		to_expand = args[2]
+		if to_expand.args[1] == :(:)
+			expanded = collect(to_expand.args[2]:to_expand.args[3])	# (1:3) case
+		else
+			expanded = to_expand.args								# ([1,2,3]) case
+		end
+	elseif length(args) == 3
+		expanded = args[2:end]										# 1|2|3 case
+	else
+		throw(ArgumentError("Failed to parse shorthand for rule: $ex"))
+	end
 end
 
 """
@@ -131,4 +187,19 @@ clearconstraints!(grammar::ContextSensitiveGrammar) = empty!(grammar.constraints
 
 function Base.display(rulenode::RuleNode, grammar::ContextSensitiveGrammar)
 	return rulenode2expr(rulenode, grammar)
+end
+
+"""
+	merge_grammars!(merge_to::AbstractGrammar, merge_from::AbstractGrammar)
+
+Adds all rules and constraints from `merge_from` to `merge_to`.
+"""
+function merge_grammars!(merge_to::AbstractGrammar, merge_from::AbstractGrammar)
+	for i in eachindex(merge_from.rules)
+		expression = :($(merge_from.types[i]) = $(merge_from.rules[i]))
+		add_rule!(merge_to, expression)
+	end
+	for i in eachindex(merge_from.constraints)
+		addconstraint!(merge_to, merge_from.constraints[i])
+	end
 end

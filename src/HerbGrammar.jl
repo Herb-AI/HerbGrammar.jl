@@ -12,10 +12,6 @@ include("rulenode_operators.jl")
 include("utils.jl")
 include("nodelocation.jl")
 
-
-include("cfg/cfg.jl")
-include("cfg/probabilistic_cfg.jl")
-
 include("csg/csg.jl")
 include("csg/probabilistic_csg.jl")
 
@@ -25,18 +21,13 @@ export
     ContextFree, 
     ContextSensitive,
 
-    ContextFreeGrammar,
-
     ContextSensitiveGrammar,
     AbstractRuleNode,
     RuleNode,
     Hole,
     NodeLoc,
 
-    ProbabilisticCFG,
-
     @cfgrammar,
-    expr2cfgrammar,
     max_arity,
     isterminal,
     iseval,
@@ -56,12 +47,11 @@ export
 
     @csgrammar,
     expr2csgrammar,
-    cfg2csg,
     clearconstraints!,
     addconstraint!,
+    merge_grammars!,
 
     @pcfgrammar,
-    expr2pcfgrammar,
 
     @pcsgrammar,
     expr2pcsgrammar,
@@ -77,9 +67,6 @@ export
     containedin,
     subsequenceof,
     has_children,
-    store_cfg,
-    read_cfg,
-    read_pcfg,
     store_csg,
     read_csg,
     read_pcsg,
