@@ -4,13 +4,13 @@ AbstractTrees.printnode(io::IO, node::RuleNode) = print(io, node.ind)
 
 
 """
-    mindepth_map(grammar::Grammar)
+    mindepth_map(grammar::AbstractGrammar)
 
-Returns the minimum depth achievable for each production rule in the [`Grammar`](@ref).
+Returns the minimum depth achievable for each production rule in the [`AbstractGrammar`](@ref).
 In other words, this function finds the depths of the lowest trees that can be made 
 using each of the available production rules as a root.
 """
-function mindepth_map(grammar::Grammar)
+function mindepth_map(grammar::AbstractGrammar)
     dmap0 = Int[isterminal(grammar,i) ? 1 : typemax(Int)/2 for i in eachindex(grammar.rules)]
     dmap1 = fill(-1, length(grammar.rules)) 
     while dmap0 != dmap1
@@ -23,37 +23,37 @@ function mindepth_map(grammar::Grammar)
 end
 
 
-function _mindepth(grammar::Grammar, rule_index::Int, dmap::AbstractVector{Int})
+function _mindepth(grammar::AbstractGrammar, rule_index::Int, dmap::AbstractVector{Int})
     isterminal(grammar, rule_index) && return 1
     return 1 + maximum([mindepth(grammar, ctyp, dmap) for ctyp in child_types(grammar, rule_index)])
 end
 
 
 """
-    mindepth(grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int})
+    mindepth(grammar::AbstractGrammar, typ::Symbol, dmap::AbstractVector{Int})
 
 Returns the minimum depth achievable for a given nonterminal symbol.
 The minimum depth is the depth of the lowest tree that can be made using `typ` 
 as a start symbol. `dmap` can be obtained from [`mindepth_map`](@ref).
 """
-function mindepth(grammar::Grammar, typ::Symbol, dmap::AbstractVector{Int})
+function mindepth(grammar::AbstractGrammar, typ::Symbol, dmap::AbstractVector{Int})
     return minimum(dmap[grammar.bytype[typ]])
 end
 
 """
     SymbolTable
 
-Data structure for mapping terminal symbols in the [`Grammar`](@ref) to their Julia interpretation.
+Data structure for mapping terminal symbols in the [`AbstractGrammar`](@ref) to their Julia interpretation.
 """
 const SymbolTable = Dict{Symbol,Any}
 
 """
-    SymbolTable(grammar::Grammar, mod::Module=Main)
+    SymbolTable(grammar::AbstractGrammar, mod::Module=Main)
 
 Returns a [`SymbolTable`](@ref) populated with a mapping from symbols in the 
-[`Grammar`](@ref) to symbols in module `mod` or `Main`, if defined.
+[`AbstractGrammar`](@ref) to symbols in module `mod` or `Main`, if defined.
 """
-function HerbGrammar.SymbolTable(grammar::Grammar, mod::Module=Main)
+function HerbGrammar.SymbolTable(grammar::AbstractGrammar, mod::Module=Main)
     tab = SymbolTable()
     for rule in grammar.rules
         _add_to_symboltable!(tab, rule, mod)
