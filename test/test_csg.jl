@@ -1,4 +1,16 @@
 @testset verbose=true "CSGs" begin
+    @testset "Create empty grammar" begin
+        g = @csgrammar begin end
+        @test isempty(g.rules)
+        @test isempty(g.types)
+        @test isempty(g.isterminal)
+        @test isempty(g.iseval)
+        @test isempty(g.bytype)
+        @test isempty(g.domains)
+        @test isempty(g.childtypes)
+        @test isnothing(g.log_probabilities)
+    end
+
     @testset "Creating grammars" begin
         g₁ = @cfgrammar begin
             Real = |(1:9)
