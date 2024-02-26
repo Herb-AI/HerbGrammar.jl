@@ -152,25 +152,26 @@ end
 rulesonleft(::Hole, ::Vector{Int}) = Set{Int}()
 
 
-"""
-	get_node_at_location(root::RuleNode, location::Vector{Int})
+#TODO: it seems like this function is exactly redefining what is already in HerbCore/rulenode.jl. It can be safely deleted
+# """
+# 	get_node_at_location(root::RuleNode, location::Vector{Int})
 
-Retrieves a [`RuleNode`](@ref) at the given location by reference. 
-"""
-function get_node_at_location(root::RuleNode, location::Vector{Int})
-    if location == []
-        return root
-    else
-        return get_node_at_location(root.children[location[1]], location[2:end])
-    end
-end
+# Retrieves a [`RuleNode`](@ref) at the given location by reference. 
+# """
+# function get_node_at_location(root::AbstractRuleNode, location::Vector{Int})
+#     if location == []
+#         return root
+#     else
+#         return get_node_at_location(root.children[location[1]], location[2:end])
+#     end
+# end
 
-function get_node_at_location(root::Hole, location::Vector{Int})
-    if location == []
-        return root
-    end
-    return nothing
-end
+# function get_node_at_location(root::VariableShapedHole, location::Vector{Int})
+#     if location == []
+#         return root
+#     end
+#     return nothing
+# end
 
 
 """
