@@ -1,6 +1,8 @@
 HerbCore.RuleNode(ind::Int, grammar::AbstractGrammar) = RuleNode(ind, nothing, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
 HerbCore.RuleNode(ind::Int, _val::Any, grammar::AbstractGrammar) = RuleNode(ind, _val, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
 
+HerbCore.FixedShapedHole(domain::BitVector, grammar::Grammar) = FixedShapedHole(domain, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[findfirst(domain)]])
+
 rulesoftype(::Hole, ::Set{Int}) = Set{Int}()
 
 """
@@ -150,25 +152,26 @@ end
 rulesonleft(::Hole, ::Vector{Int}) = Set{Int}()
 
 
-"""
-	get_node_at_location(root::RuleNode, location::Vector{Int})
+#TODO: it seems like this function is exactly redefining what is already in HerbCore/rulenode.jl. It can be safely deleted
+# """
+# 	get_node_at_location(root::RuleNode, location::Vector{Int})
 
-Retrieves a [`RuleNode`](@ref) at the given location by reference. 
-"""
-function get_node_at_location(root::RuleNode, location::Vector{Int})
-    if location == []
-        return root
-    else
-        return get_node_at_location(root.children[location[1]], location[2:end])
-    end
-end
+# Retrieves a [`RuleNode`](@ref) at the given location by reference. 
+# """
+# function get_node_at_location(root::AbstractRuleNode, location::Vector{Int})
+#     if location == []
+#         return root
+#     else
+#         return get_node_at_location(root.children[location[1]], location[2:end])
+#     end
+# end
 
-function get_node_at_location(root::Hole, location::Vector{Int})
-    if location == []
-        return root
-    end
-    return nothing
-end
+# function get_node_at_location(root::VariableShapedHole, location::Vector{Int})
+#     if location == []
+#         return root
+#     end
+#     return nothing
+# end
 
 
 """

@@ -60,7 +60,7 @@ function read_csg(grammarpath::AbstractString, constraintspath::OptionalPath=not
     end
 
     return ContextSensitiveGrammar(g.rules, g.types, g.isterminal, 
-        g.iseval, g.bytype, g.domains, g.childtypes, g.log_probabilities, constraints)
+        g.iseval, g.bytype, g.domains, g.childtypes, g.bychildtypes, g.log_probabilities, constraints)
 end
 
 """
@@ -93,7 +93,7 @@ function read_pcsg(grammarpath::AbstractString, constraintspath::OptionalPath=no
     end
     
     return ContextSensitiveGrammar(g.rules, g.types, g.isterminal, 
-        g.iseval, g.bytype, g.domains, g.childtypes, g.log_probabilities, constraints)
+        g.iseval, g.bytype, g.domains, g.childtypes, g.bychildtypes, g.log_probabilities, constraints)
 end
 
 
