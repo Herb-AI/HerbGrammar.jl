@@ -1,8 +1,8 @@
 """
-	ContextSensitiveGrammar <: Grammar
+	ContextSensitiveGrammar <: AbstractGrammar
 
 Represents a context-sensitive grammar.
-Extends [`Grammar`](@ref) with constraints.
+Extends [`AbstractGrammar`](@ref) with constraints.
 
 Consists of:
 
@@ -23,7 +23,7 @@ Consists of:
 Use the [`@csgrammar`](@ref) macro to create a [`ContextSensitiveGrammar`](@ref) object.
 Use the [`@pcsgrammar`](@ref) macro to create a [`ContextSensitiveGrammar`](@ref) object with probabilities.
 """
-mutable struct ContextSensitiveGrammar <: Grammar
+mutable struct ContextSensitiveGrammar <: AbstractGrammar
 	rules::Vector{Any}
 	types::Vector{Union{Symbol, Nothing}}
 	isterminal::BitVector
@@ -194,11 +194,11 @@ function Base.display(rulenode::RuleNode, grammar::ContextSensitiveGrammar)
 end
 
 """
-	merge_grammars!(merge_to::Grammar, merge_from::Grammar)
+	merge_grammars!(merge_to::AbstractGrammar, merge_from::AbstractGrammar)
 
 Adds all rules and constraints from `merge_from` to `merge_to`.
 """
-function merge_grammars!(merge_to::Grammar, merge_from::Grammar)
+function merge_grammars!(merge_to::AbstractGrammar, merge_from::AbstractGrammar)
 	for i in eachindex(merge_from.rules)
 		expression = :($(merge_from.types[i]) = $(merge_from.rules[i]))
 		add_rule!(merge_to, expression)
