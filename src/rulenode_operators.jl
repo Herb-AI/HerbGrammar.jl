@@ -274,6 +274,14 @@ return_type(grammar::AbstractGrammar, node::RuleNode)::Symbol = grammar.types[no
 
 
 """
+    return_type(grammar::AbstractGrammar, hole::UniformHole)
+
+Gives the return type or nonterminal symbol in the production rule used by `hole`.
+"""
+return_type(grammar::AbstractGrammar, hole::UniformHole)::Symbol = grammar.types[findfirst(hole.domain)]
+
+
+"""
     child_types(grammar::AbstractGrammar, node::RuleNode)
 
 Returns the list of child types (nonterminal symbols) in the production rule used by `node`.
