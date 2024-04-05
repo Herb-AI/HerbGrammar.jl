@@ -1,7 +1,8 @@
+# HerbGrammar.jl
+
+[![codecov](https://codecov.io/github/Herb-AI/HerbGrammar.jl/graph/badge.svg?token=IKDBJC5IBK)](https://codecov.io/github/Herb-AI/HerbGrammar.jl)
 [![Build Status](https://github.com/Herb-AI/HerbGrammar.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/Herb-AI/HerbGrammar.jl/actions/workflows/CI.yml?query=branch%3Amaster)
 [![Dev-Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://Herb-AI.github.io/Herb.jl/dev)
-
-# HerbGrammar.jl
 
 This package contains functionality for declaring grammars for the Herb Program Synthesis framework.
 
