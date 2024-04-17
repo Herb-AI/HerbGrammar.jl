@@ -1,7 +1,7 @@
 HerbCore.RuleNode(ind::Int, grammar::AbstractGrammar) = RuleNode(ind, nothing, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
 HerbCore.RuleNode(ind::Int, _val::Any, grammar::AbstractGrammar) = RuleNode(ind, _val, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
 
-HerbCore.FixedShapedHole(domain::BitVector, grammar::AbstractGrammar) = FixedShapedHole(domain, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[findfirst(domain)]])
+HerbCore.UniformHole(domain::BitVector, grammar::AbstractGrammar) = UniformHole(domain, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[findfirst(domain)]])
 
 rulesoftype(::Hole, ::Set{Int}) = Set{Int}()
 

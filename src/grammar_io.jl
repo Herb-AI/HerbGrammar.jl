@@ -5,7 +5,7 @@ const OptionalPath = Union{Nothing, AbstractString}
 
 Writes a [`ContextSensitiveGrammar`](@ref) to the files at `grammarpath` and `constraintspath`.
 The `grammarpath` file will contain a [`ContextSensitiveGrammar`](@ref) definition, and the
-`constraintspath` file will contain the [`Constraint`](@ref)s of the [`ContextSensitiveGrammar`](@ref).
+`constraintspath` file will contain the [`AbstractConstraint`](@ref)s of the [`ContextSensitiveGrammar`](@ref).
 """
 function store_csg(grammar::ContextSensitiveGrammar, filepath::AbstractString, constraintspath::OptionalPath=nothing)
     # Store grammar as CFG
@@ -56,7 +56,7 @@ function read_csg(grammarpath::AbstractString, constraintspath::OptionalPath=not
         constraints = deserialize(file)
         close(file)
     else
-        constraints = Constraint[]
+        constraints = AbstractConstraint[]
     end
 
     return ContextSensitiveGrammar(g.rules, g.types, g.isterminal, 
@@ -89,7 +89,7 @@ function read_pcsg(grammarpath::AbstractString, constraintspath::OptionalPath=no
         constraints = deserialize(file)
         close(file)
     else
-        constraints = Constraint[]
+        constraints = AbstractConstraint[]
     end
     
     return ContextSensitiveGrammar(g.rules, g.types, g.isterminal, 

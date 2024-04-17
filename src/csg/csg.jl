@@ -18,7 +18,7 @@ Consists of:
 - `bychildtypes::Vector{BitVector}`: A bitvector of rules that share the same childtypes for each rule
 - `log_probabilities::Union{Vector{Real}, Nothing}`: A list of probabilities for each rule. 
   If the grammar is non-probabilistic, the list can be `nothing`.
-- `constraints::Vector{Constraint}`: A list of constraints that programs in this grammar have to abide.
+- `constraints::Vector{AbstractConstraint}`: A list of constraints that programs in this grammar have to abide.
 
 Use the [`@csgrammar`](@ref) macro to create a [`ContextSensitiveGrammar`](@ref) object.
 Use the [`@pcsgrammar`](@ref) macro to create a [`ContextSensitiveGrammar`](@ref) object with probabilities.
@@ -33,7 +33,7 @@ mutable struct ContextSensitiveGrammar <: AbstractGrammar
 	childtypes::Vector{Vector{Symbol}}
 	bychildtypes::Vector{BitVector}
 	log_probabilities::Union{Vector{Real}, Nothing}
-	constraints::Vector{Constraint}
+	constraints::Vector{AbstractConstraint}
 end
 
 ContextSensitiveGrammar(
@@ -46,7 +46,7 @@ ContextSensitiveGrammar(
 	childtypes::Vector{Vector{Symbol}},
 	bychildtypes::Vector{BitVector},
 	log_probabilities::Union{Vector{<:Real}, Nothing}
-) = ContextSensitiveGrammar(rules, types, isterminal, iseval, bytype, domains, childtypes, bychildtypes, log_probabilities, Constraint[])
+) = ContextSensitiveGrammar(rules, types, isterminal, iseval, bytype, domains, childtypes, bychildtypes, log_probabilities, AbstractConstraint[])
 
 """
 	expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
@@ -101,7 +101,7 @@ end
 	@csgrammar
 
 A macro for defining a [`ContextSensitiveGrammar`](@ref). 
-Constraints can be added afterwards using the [`addconstraint!`](@ref) function.
+AbstractConstraints can be added afterwards using the [`addconstraint!`](@ref) function.
 
 ### Example usage:
 ```julia
@@ -178,11 +178,11 @@ function _expand_shorthand(args::Vector{Any})
 end
 
 """
-	addconstraint!(grammar::ContextSensitiveGrammar, c::Constraint)
+	addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint)
 
-Adds a [`Constraint`](@ref) to a [`ContextSensitiveGrammar`](@ref).
+Adds a [`AbstractConstraint`](@ref) to a [`ContextSensitiveGrammar`](@ref).
 """
-addconstraint!(grammar::ContextSensitiveGrammar, c::Constraint) = push!(grammar.constraints, c)
+addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint) = push!(grammar.constraints, c)
 
 """
 Clear all constraints from the grammar
