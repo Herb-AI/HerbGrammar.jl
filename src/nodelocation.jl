@@ -16,10 +16,10 @@ Returns a NodeLoc pointing to the root node.
 root_node_loc(root::RuleNode) = NodeLoc(root, 0)
 
 """
-get(root::RuleNode, loc::NodeLoc)
+get(root::AbstractRuleNode, loc::NodeLoc)
 Obtain the node pointed to by loc.
 """
-function Base.get(root::RuleNode, loc::NodeLoc)
+function Base.get(root::AbstractRuleNode, loc::NodeLoc)
     parent, i = loc.parent, loc.i
     if loc.i > 0
         return parent.children[i]
