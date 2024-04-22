@@ -72,6 +72,8 @@ export
     read_pcsg,
     add_rule!,
     remove_rule!,
-    cleanup_removed_rules!
+    cleanup_removed_rules!,
+
+    RuleNodeTypeCheckError
 
 end # module HerbGrammar
