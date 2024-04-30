@@ -133,6 +133,12 @@ macro csgrammar(ex)
 	return expr2csgrammar(ex)
 end
 
+
+"""
+	@cfgrammar
+
+This macro is deprecated and will be removed in future versions. Use [`@csgrammar`](@ref) instead.
+"""
 macro cfgrammar(ex)
 	return expr2csgrammar(ex)
 end
