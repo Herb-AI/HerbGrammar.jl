@@ -191,10 +191,10 @@ function rulenode2expr(rulenode::AbstractRuleNode, grammar::AbstractGrammar)
     return root
 end
 
-function _get_hole_type(hole::Hole, grammar::AbstractGrammar)
+function _get_hole_type(hole::AbstractHole, grammar::AbstractGrammar)
     #TODO: convert the children of UniformHoles to subexpressions
     @assert !isfilled(hole) "Hole $(hole) is convertable to an expression. There is no need to represent it using a symbol."
-    index = findfirst(rulenode.domain)
+    index = findfirst(hole.domain)
     return isnothing(index) ? :Nothing : grammar.types[index]
 end
 
@@ -205,17 +205,18 @@ function _rulenode2expr(expr::Expr, rulenode::AbstractRuleNode, grammar::Abstrac
                 expr.args[k],j = _rulenode2expr(arg, rulenode, grammar, j)
             elseif haskey(grammar.bytype, arg)
                 child = rulenode.children[j+=1]
-                if !isfilled(rulenode)
-                    return _get_hole_type(rulenode, grammar)
-                end
-                expr.args[k] = hasdynamicvalue(rulenode) ? child._val : deepcopy(grammar.rules[get_rule(child)])
-                if !isterminal(grammar, child)
-                    expr.args[k],_ = _rulenode2expr(expr.args[k], child, grammar, 0)
+                if isfilled(child)
+                    expr.args[k] = hasdynamicvalue(child) ? child._val : deepcopy(grammar.rules[get_rule(child)])
+                    if !isterminal(grammar, child)
+                        expr.args[k],_ = _rulenode2expr(expr.args[k], child, grammar, 0)
+                    end
+                else
+                    expr.args[k] = _get_hole_type(child, grammar)
                 end
             end
         end
-        return expr, j
     end
+    return expr, j
 end
 
 
