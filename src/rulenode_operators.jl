@@ -220,13 +220,11 @@ function _rulenode2expr(expr::Expr, rulenode::AbstractRuleNode, grammar::Abstrac
 end
 
 
-function _rulenode2expr(typ::Symbol, rulenode::RuleNode, grammar::AbstractGrammar, j=0)
+function _rulenode2expr(typ::Symbol, rulenode::AbstractRuleNode, grammar::AbstractGrammar, j=0)
+    @assert isfilled(rulenode) "grammar contains a duplicate rule"
     retval = typ
     if haskey(grammar.bytype, typ)
         child = rulenode.children[1]
-        if isa(child, Hole) 
-            return retval, j
-        end
         retval = hasdynamicvalue(rulenode) ? child._val : deepcopy(grammar.rules[get_rule(child)])
         if !grammar.isterminal[get_rule(child)]
             retval,_ = _rulenode2expr(retval, child, grammar, 0)
