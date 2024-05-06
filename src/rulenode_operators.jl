@@ -152,28 +152,6 @@ end
 rulesonleft(::Hole, ::Vector{Int}) = Set{Int}()
 
 
-#TODO: it seems like this function is exactly redefining what is already in HerbCore/rulenode.jl. It can be safely deleted
-# """
-# 	get_node_at_location(root::RuleNode, location::Vector{Int})
-
-# Retrieves a [`RuleNode`](@ref) at the given location by reference. 
-# """
-# function get_node_at_location(root::AbstractRuleNode, location::Vector{Int})
-#     if location == []
-#         return root
-#     else
-#         return get_node_at_location(root.children[location[1]], location[2:end])
-#     end
-# end
-
-# function get_node_at_location(root::VariableShapedHole, location::Vector{Int})
-#     if location == []
-#         return root
-#     end
-#     return nothing
-# end
-
-
 """
     rulenode2expr(rulenode::AbstractRuleNode, grammar::AbstractGrammar)
 
@@ -192,7 +170,6 @@ function rulenode2expr(rulenode::AbstractRuleNode, grammar::AbstractGrammar)
 end
 
 function _get_hole_type(hole::AbstractHole, grammar::AbstractGrammar)
-    #TODO: convert the children of UniformHoles to subexpressions
     @assert !isfilled(hole) "Hole $(hole) is convertable to an expression. There is no need to represent it using a symbol."
     index = findfirst(hole.domain)
     return isnothing(index) ? :Nothing : grammar.types[index]
