@@ -27,6 +27,11 @@
             Real = 1 | 2 | 3
         end
         @test g₃.rules == [1,2,3]
+
+        g₄ = @cfgrammar begin
+            Real = 1 | 1
+        end
+        @test g₄.rules == [1]
     end
 
 
@@ -38,6 +43,12 @@
         # Basic adding
         add_rule!(g₁, :(Real = 3))
         @test g₁.rules == [1, 2, 3]
+        @test g₁.bytype[:Real] == [1, 2, 3]
+        @test g₁.types == [:Real, :Real, :Real]
+        @test g₁.isterminal == [true, true, true]
+        @test g₁.iseval == [false, false, false]
+        @test g₁.childtypes == [[], [], []]
+        @test g₁.bychildtypes == [BitVector((1, 1, 1)) for _ in 1:3]
 
         # Adding multiple rules in one line
         add_rule!(g₁, :(Real = 4 | 5))
