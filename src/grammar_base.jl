@@ -214,7 +214,7 @@ function add_rule!(g::AbstractGrammar, e::Expr)
             # Only add a rule if it does not exist yet. Check for existance
             # with strict equality so that true and 1 are not considered
             # equal. that means we can't use `in` or `∈` for equality checking.
-            if !any(r === rule for rule ∈ g.rules)
+            if !any(r === rule || typeof(r)==Expr && r == rule for rule ∈ g.rules)
                 push!(g.rules, r)
                 push!(g.iseval, iseval(rule))
                 push!(g.types, s)
