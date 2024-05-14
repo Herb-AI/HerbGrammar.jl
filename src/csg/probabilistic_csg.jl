@@ -52,8 +52,9 @@ function expr2pcsgrammar(ex::Expr)::ContextSensitiveGrammar
 	is_eval = [iseval(rule) for rule in rules]
 	childtypes = [get_childtypes(rule, alltypes) for rule in rules]
 	domains = Dict(type => BitArray(r ∈ bytype[type] for r ∈ 1:length(rules)) for type ∈ alltypes)
-	
-	normalize!(ContextSensitiveGrammar(rules, types, is_terminal, is_eval, bytype, domains, childtypes, log_probabilities))
+	bychildtypes = [BitVector([childtypes[i1] == childtypes[i2] for i2 ∈ 1:length(rules)]) for i1 ∈ 1:length(rules)]
+
+	normalize!(ContextSensitiveGrammar(rules, types, is_terminal, is_eval, bytype, domains, childtypes, bychildtypes, log_probabilities))
 end
 
 """

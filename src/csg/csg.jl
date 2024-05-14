@@ -15,9 +15,10 @@ Consists of:
   The domain bitvector has bit `i` set to true iff the `i`th rule is of this type.
 - `childtypes::Vector{Vector{Symbol}}`: A list of types of the children for each rule. 
   If a rule is terminal, the corresponding list is empty.
+- `bychildtypes::Vector{BitVector}`: A bitvector of rules that share the same childtypes for each rule
 - `log_probabilities::Union{Vector{Real}, Nothing}`: A list of probabilities for each rule. 
   If the grammar is non-probabilistic, the list can be `nothing`.
-- `constraints::Vector{Constraint}`: A list of constraints that programs in this grammar have to abide.
+- `constraints::Vector{AbstractConstraint}`: A list of constraints that programs in this grammar have to abide.
 
 Use the [`@csgrammar`](@ref) macro to create a [`ContextSensitiveGrammar`](@ref) object.
 Use the [`@pcsgrammar`](@ref) macro to create a [`ContextSensitiveGrammar`](@ref) object with probabilities.
@@ -30,8 +31,9 @@ mutable struct ContextSensitiveGrammar <: AbstractGrammar
 	bytype::Dict{Symbol, Vector{Int}}
 	domains::Dict{Symbol,BitVector}    				
 	childtypes::Vector{Vector{Symbol}}
+	bychildtypes::Vector{BitVector}
 	log_probabilities::Union{Vector{Real}, Nothing}
-	constraints::Vector{Constraint}
+	constraints::Vector{AbstractConstraint}
 end
 
 ContextSensitiveGrammar(
@@ -42,8 +44,11 @@ ContextSensitiveGrammar(
 	bytype::Dict{Symbol, Vector{Int}},
 	domains::Dict{Symbol, BitVector},
 	childtypes::Vector{Vector{Symbol}},
+	bychildtypes::Vector{BitVector},
 	log_probabilities::Union{Vector{<:Real}, Nothing}
-) = ContextSensitiveGrammar(rules, types, isterminal, iseval, bytype, domains, childtypes,	log_probabilities, Constraint[])
+) = ContextSensitiveGrammar(rules, types, isterminal, iseval, bytype, domains, childtypes, bychildtypes, log_probabilities, AbstractConstraint[])
+
+ContextSensitiveGrammar() = ContextSensitiveGrammar([], [], BitVector[], BitVector[], Dict{Symbol, Vector{Int}}(), Dict{Symbol, BitVector}(), Vector{Vector{Symbol}}(), Vector{BitVector}(), nothing, AbstractConstraint[])
 
 """
 	expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
@@ -65,30 +70,15 @@ grammar = expr2csgrammar(
 ```
 """
 function expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
-	rules = Any[]
-	types = Symbol[]
-	bytype = Dict{Symbol,Vector{Int}}()
+	grammar = ContextSensitiveGrammar()
+	
 	for e ∈ ex.args
 		if isa(e, Expr)
-			if e.head == :(=)
-				s = e.args[1] 		# name of return type
-				rule = e.args[2] 	# expression?
-				rvec = Any[]
-				parse_rule!(rvec, rule)
-				for r ∈ rvec
-					push!(rules, r)
-					push!(types, s)
-					bytype[s] = push!(get(bytype, s, Int[]), length(rules))
-				end
-			end
+			add_rule!(grammar, e)
 		end
 	end
-	alltypes = collect(keys(bytype))
-	is_terminal::Vector{Bool} = [isterminal(rule, alltypes) for rule ∈ rules]
-	is_eval::Vector{Bool} = [iseval(rule) for rule ∈ rules]
-	childtypes::Vector{Vector{Symbol}} = [get_childtypes(rule, alltypes) for rule ∈ rules]
-	domains = Dict(type => BitArray(r ∈ bytype[type] for r ∈ 1:length(rules)) for type ∈ alltypes)
-	return ContextSensitiveGrammar(rules, types, is_terminal, is_eval, bytype, domains, childtypes, nothing)
+
+	return grammar
 end
 
 
@@ -97,7 +87,7 @@ end
 	@csgrammar
 
 A macro for defining a [`ContextSensitiveGrammar`](@ref). 
-Constraints can be added afterwards using the [`addconstraint!`](@ref) function.
+AbstractConstraints can be added afterwards using the [`addconstraint!`](@ref) function.
 
 ### Example usage:
 ```julia
@@ -129,6 +119,12 @@ macro csgrammar(ex)
 	return expr2csgrammar(ex)
 end
 
+
+"""
+	@cfgrammar
+
+This macro is deprecated and will be removed in future versions. Use [`@csgrammar`](@ref) instead.
+"""
 macro cfgrammar(ex)
 	return expr2csgrammar(ex)
 end
@@ -174,11 +170,11 @@ function _expand_shorthand(args::Vector{Any})
 end
 
 """
-	addconstraint!(grammar::ContextSensitiveGrammar, c::Constraint)
+	addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint)
 
-Adds a [`Constraint`](@ref) to a [`ContextSensitiveGrammar`](@ref).
+Adds a [`AbstractConstraint`](@ref) to a [`ContextSensitiveGrammar`](@ref).
 """
-addconstraint!(grammar::ContextSensitiveGrammar, c::Constraint) = push!(grammar.constraints, c)
+addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint) = push!(grammar.constraints, c)
 
 """
 Clear all constraints from the grammar

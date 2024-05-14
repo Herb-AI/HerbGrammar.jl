@@ -27,6 +27,11 @@
             Real = 1 | 2 | 3
         end
         @test g₃.rules == [1,2,3]
+
+        g₄ = @cfgrammar begin
+            Real = 1 | 1
+        end
+        @test g₄.rules == [1]
     end
 
 
@@ -38,6 +43,12 @@
         # Basic adding
         add_rule!(g₁, :(Real = 3))
         @test g₁.rules == [1, 2, 3]
+        @test g₁.bytype[:Real] == [1, 2, 3]
+        @test g₁.types == [:Real, :Real, :Real]
+        @test g₁.isterminal == [true, true, true]
+        @test g₁.iseval == [false, false, false]
+        @test g₁.childtypes == [[], [], []]
+        @test g₁.bychildtypes == [BitVector((1, 1, 1)) for _ in 1:3]
 
         # Adding multiple rules in one line
         add_rule!(g₁, :(Real = 4 | 5))
@@ -183,6 +194,37 @@
         add_rule!(g₁, :(R = 1 | 2))
 
         @test all(g₁.rules .== [:x, :(R + R), true, 1, 2])
+    end
+
+    @testset "Test bychildtypes" begin
+        g = @csgrammar begin
+            S = 1
+            S = 2 + S + A
+            S = 3 + A + S
+            A = 4
+            S = 5 + S + S
+            S = 6 + S + S
+            S = 7 + S
+            A = 8 + S
+        end
+        
+        @test g.childtypes[1] == []
+        @test g.childtypes[2] == [:S, :A]
+        @test g.childtypes[3] == [:A, :S]
+        @test g.childtypes[4] == []
+        @test g.childtypes[5] == [:S, :S]
+        @test g.childtypes[6] == [:S, :S]
+        @test g.childtypes[7] == [:S]
+        @test g.childtypes[8] == [:S]
+        
+        @test g.bychildtypes[1] == [1, 0, 0, 1, 0, 0, 0, 0] # 1, 4
+        @test g.bychildtypes[2] == [0, 1, 0, 0, 0, 0, 0, 0] # 2
+        @test g.bychildtypes[3] == [0, 0, 1, 0, 0, 0, 0, 0] # 3
+        @test g.bychildtypes[4] == [1, 0, 0, 1, 0, 0, 0, 0] # 1, 4
+        @test g.bychildtypes[5] == [0, 0, 0, 0, 1, 1, 0, 0] # 5, 6
+        @test g.bychildtypes[6] == [0, 0, 0, 0, 1, 1, 0, 0] # 5, 6
+        @test g.bychildtypes[7] == [0, 0, 0, 0, 0, 0, 1, 1] # 7, 8
+        @test g.bychildtypes[8] == [0, 0, 0, 0, 0, 0, 1, 1] # 7, 8
     end
 
 end
