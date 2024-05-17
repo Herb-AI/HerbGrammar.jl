@@ -116,7 +116,7 @@ end
 - [`@pcsgrammar`](@ref) uses a similar syntax to create probabilistic [`ContextSensitiveGrammar`](@ref)s.
 """
 macro csgrammar(ex)
-	return expr2csgrammar(ex)
+	return :(expr2csgrammar($(QuoteNode(ex))))
 end
 
 
