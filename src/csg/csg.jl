@@ -126,7 +126,7 @@ end
 This macro is deprecated and will be removed in future versions. Use [`@csgrammar`](@ref) instead.
 """
 macro cfgrammar(ex)
-	return expr2csgrammar(ex)
+	return :(expr2csgrammar($(QuoteNode(ex))))
 end
 
 parse_rule!(v::Vector{Any}, r) = push!(v, r)
