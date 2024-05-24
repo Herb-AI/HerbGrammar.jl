@@ -150,13 +150,3 @@ function subsequenceof(vec1::Vector{Int}, vec2::Vector{Int})
     return get(vec1, vec1_index, nothing) === nothing
 
 end
-
-
-"""
-    has_children(node::RuleNode)
-
-Returns true if `node` has children
-"""
-has_children(node::RuleNode) = !isempty(node.children)
-has_children(::Hole) = false
-

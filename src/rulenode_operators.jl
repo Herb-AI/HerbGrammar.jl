@@ -152,28 +152,6 @@ end
 rulesonleft(::Hole, ::Vector{Int}) = Set{Int}()
 
 
-#TODO: it seems like this function is exactly redefining what is already in HerbCore/rulenode.jl. It can be safely deleted
-# """
-# 	get_node_at_location(root::RuleNode, location::Vector{Int})
-
-# Retrieves a [`RuleNode`](@ref) at the given location by reference. 
-# """
-# function get_node_at_location(root::AbstractRuleNode, location::Vector{Int})
-#     if location == []
-#         return root
-#     else
-#         return get_node_at_location(root.children[location[1]], location[2:end])
-#     end
-# end
-
-# function get_node_at_location(root::VariableShapedHole, location::Vector{Int})
-#     if location == []
-#         return root
-#     end
-#     return nothing
-# end
-
-
 """
     rulenode2expr(rulenode::AbstractRuleNode, grammar::AbstractGrammar)
 
@@ -191,10 +169,9 @@ function rulenode2expr(rulenode::AbstractRuleNode, grammar::AbstractGrammar)
     return root
 end
 
-function _get_hole_type(hole::Hole, grammar::AbstractGrammar)
-    #TODO: convert the children of UniformHoles to subexpressions
+function _get_hole_type(hole::AbstractHole, grammar::AbstractGrammar)
     @assert !isfilled(hole) "Hole $(hole) is convertable to an expression. There is no need to represent it using a symbol."
-    index = findfirst(rulenode.domain)
+    index = findfirst(hole.domain)
     return isnothing(index) ? :Nothing : grammar.types[index]
 end
 
@@ -205,27 +182,26 @@ function _rulenode2expr(expr::Expr, rulenode::AbstractRuleNode, grammar::Abstrac
                 expr.args[k],j = _rulenode2expr(arg, rulenode, grammar, j)
             elseif haskey(grammar.bytype, arg)
                 child = rulenode.children[j+=1]
-                if !isfilled(rulenode)
-                    return _get_hole_type(rulenode, grammar)
-                end
-                expr.args[k] = hasdynamicvalue(rulenode) ? child._val : deepcopy(grammar.rules[get_rule(child)])
-                if !isterminal(grammar, child)
-                    expr.args[k],_ = _rulenode2expr(expr.args[k], child, grammar, 0)
+                if isfilled(child)
+                    expr.args[k] = hasdynamicvalue(child) ? child._val : deepcopy(grammar.rules[get_rule(child)])
+                    if !isterminal(grammar, child)
+                        expr.args[k],_ = _rulenode2expr(expr.args[k], child, grammar, 0)
+                    end
+                else
+                    expr.args[k] = _get_hole_type(child, grammar)
                 end
             end
         end
-        return expr, j
     end
+    return expr, j
 end
 
 
-function _rulenode2expr(typ::Symbol, rulenode::RuleNode, grammar::AbstractGrammar, j=0)
+function _rulenode2expr(typ::Symbol, rulenode::AbstractRuleNode, grammar::AbstractGrammar, j=0)
+    @assert isfilled(rulenode) "grammar contains a duplicate rule"
     retval = typ
     if haskey(grammar.bytype, typ)
         child = rulenode.children[1]
-        if isa(child, Hole) 
-            return retval, j
-        end
         retval = hasdynamicvalue(rulenode) ? child._val : deepcopy(grammar.rules[get_rule(child)])
         if !grammar.isterminal[get_rule(child)]
             retval,_ = _rulenode2expr(retval, child, grammar, 0)

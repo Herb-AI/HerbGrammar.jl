@@ -66,7 +66,6 @@ export
     mindepth,
     containedin,
     subsequenceof,
-    has_children,
     store_csg,
     read_csg,
     read_pcsg,
