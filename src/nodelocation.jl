@@ -44,3 +44,22 @@ function Base.insert!(root::RuleNode, loc::NodeLoc, rulenode::RuleNode)
 	end
 	return root
 end
+
+"""
+insert!(root::RuleNode, loc::NodeLoc, hole::Hole)
+
+Inserts a hole at the location pointed to by loc.
+
+!!! warning
+The user is responsible for ensuring that the hole's domain matches the domain of
+the node it is replacing. This function does not currently check for this.
+"""
+function Base.insert!(root::RuleNode, loc::NodeLoc, hole::Hole)
+	parent, i = loc.parent, loc.i
+	if loc.i > 0
+		parent.children[i] = hole
+	else
+		throw(ArgumentError("Inserting a hole at the root node is not supported."))
+	end
+	return root
+end
