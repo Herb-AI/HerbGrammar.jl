@@ -33,7 +33,7 @@ end
 insert!(loc::NodeLoc, rulenode::RuleNode)
 Replaces the subtree pointed to by loc with the given rulenode.
 """
-function Base.insert!(root::RuleNode, loc::NodeLoc, rulenode::RuleNode)
+function Base.insert!(root::RuleNode, loc::NodeLoc, rulenode::AbstractRuleNode)
     parent, i = loc.parent, loc.i
     if loc.i > 0
         parent.children[i] = rulenode
