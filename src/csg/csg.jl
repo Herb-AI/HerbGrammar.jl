@@ -70,15 +70,32 @@ grammar = expr2csgrammar(
 ```
 """
 function expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
-	grammar = ContextSensitiveGrammar()
+	rules = Any[]
+	types = Symbol[]
+	bytype = Dict{Symbol,Vector{Int}}()
 	
 	for e ∈ ex.args
 		if isa(e, Expr)
-			add_rule!(grammar, e)
+			if e.head == :(=)
+				s = e.args[1] 		# name of return type
+				rule = e.args[2] 	# expression?
+				rvec = Any[]
+				parse_rule!(rvec, rule)
+				for r ∈ rvec
+					push!(rules, r)
+					push!(types, s)
+					bytype[s] = push!(get(bytype, s, Int[]), length(rules))
+				end
+			end
 		end
 	end
-
-	return grammar
+	alltypes = collect(keys(bytype))
+	is_terminal::Vector{Bool} = [isterminal(rule, alltypes) for rule ∈ rules]
+	is_eval::Vector{Bool} = [iseval(rule) for rule ∈ rules]
+	childtypes::Vector{Vector{Symbol}} = [get_childtypes(rule, alltypes) for rule ∈ rules]
+	domains = Dict(type => BitArray(r ∈ bytype[type] for r ∈ 1:length(rules)) for type ∈ alltypes)
+	bychildtypes = [BitVector([childtypes[i1] == childtypes[i2] for i2 ∈ 1:length(rules)]) for i1 ∈ 1:length(rules)]
+	return ContextSensitiveGrammar(rules, types, is_terminal, is_eval, bytype, domains, childtypes, bychildtypes, nothing)
 end
 
 
