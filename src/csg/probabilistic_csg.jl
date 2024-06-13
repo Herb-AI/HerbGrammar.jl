@@ -44,7 +44,7 @@ function expr2pcsgrammar(ex::Expr)::ContextSensitiveGrammar
 		end
 	end
 
-	log_probabilities = [log(x) for x ∈ probabilities]
+	log_probabilities = [log(2, x) for x ∈ probabilities]
 	is_terminal = [isterminal(rule, alltypes) for rule in rules]
 	is_eval = [iseval(rule) for rule in rules]
 	childtypes = [get_childtypes(rule, alltypes) for rule in rules]
