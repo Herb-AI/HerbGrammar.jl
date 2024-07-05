@@ -162,7 +162,7 @@ function rulenode2expr(rulenode::AbstractRuleNode, grammar::AbstractGrammar)
     if !isfilled(rulenode)
         return _get_hole_type(rulenode, grammar)
     end
-    root = hasdynamicvalue(rulenode) ? rulenode._val : deepcopy(grammar.rules[get_rule(rulenode)])
+    root = deepcopy(grammar.rules[get_rule(rulenode)])
     if !grammar.isterminal[get_rule(rulenode)] # not terminal
         root,_ = _rulenode2expr(root, rulenode, grammar)
     end
@@ -183,7 +183,7 @@ function _rulenode2expr(expr::Expr, rulenode::AbstractRuleNode, grammar::Abstrac
             elseif haskey(grammar.bytype, arg)
                 child = rulenode.children[j+=1]
                 if isfilled(child)
-                    expr.args[k] = hasdynamicvalue(child) ? child._val : deepcopy(grammar.rules[get_rule(child)])
+                    expr.args[k] = deepcopy(grammar.rules[get_rule(child)])
                     if !isterminal(grammar, child)
                         expr.args[k],_ = _rulenode2expr(expr.args[k], child, grammar, 0)
                     end
@@ -202,7 +202,7 @@ function _rulenode2expr(typ::Symbol, rulenode::AbstractRuleNode, grammar::Abstra
     retval = typ
     if haskey(grammar.bytype, typ)
         child = rulenode.children[1]
-        retval = hasdynamicvalue(rulenode) ? child._val : deepcopy(grammar.rules[get_rule(child)])
+        retval = deepcopy(grammar.rules[get_rule(child)])
         if !grammar.isterminal[get_rule(child)]
             retval,_ = _rulenode2expr(retval, child, grammar, 0)
         end
