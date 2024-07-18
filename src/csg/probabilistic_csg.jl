@@ -36,17 +36,6 @@ function expr2pcsgrammar(ex::Expr)::ContextSensitiveGrammar
 		end
 	end
 	alltypes = collect(keys(bytype))
-	# Normalize probabilities for each type
-	for t ∈ alltypes
-		total_prob = sum(probabilities[i] for i ∈ bytype[t])
-		if !(total_prob ≈ 1)
-			@warn "The probabilities for type $t don't add up to 1, so they will be normalized."
-			for i ∈ bytype[t]
-				probabilities[i] /= total_prob
-			end
-		end
-	end
-
 	log_probabilities = [log(x) for x ∈ probabilities]
 	is_terminal = [isterminal(rule, alltypes) for rule in rules]
 	is_eval = [iseval(rule) for rule in rules]
