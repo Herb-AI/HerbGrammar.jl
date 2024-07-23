@@ -227,4 +227,18 @@
         @test g.bychildtypes[8] == [0, 0, 0, 0, 0, 0, 1, 1] # 7, 8
     end
 
+    @testset "Check that macros return an expr, not an object" begin
+        @test typeof(@macroexpand @csgrammar begin 
+            A = 1
+        end) == Expr
+        @test typeof(@macroexpand @cfgrammar begin 
+            A = 1
+        end) == Expr
+        @test typeof(@macroexpand @pcsgrammar begin 
+            1.0 : A = 1
+        end) == Expr
+        @test typeof(@macroexpand @pcfgrammar begin 
+            1.0 : A = 1
+        end) == Expr
+    end
 end

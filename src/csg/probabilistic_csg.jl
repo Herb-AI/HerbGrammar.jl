@@ -138,9 +138,9 @@ The probabilities are automatically scaled if this isn't the case.
 - [`@csgrammar`](@ref) uses a similar syntax to create non-probabilistic [`ContextSensitiveGrammar`](@ref)s.
 """
 macro pcsgrammar(ex)
-	return expr2pcsgrammar(ex)
+	return :(expr2pcsgrammar($(QuoteNode(ex))))
 end
 
 macro pcfgrammar(ex)
-	return expr2pcsgrammar(ex)
+	return :(expr2pcsgrammar($(QuoteNode(ex))))
 end
