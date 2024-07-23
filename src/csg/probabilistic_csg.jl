@@ -52,13 +52,14 @@ Returns `nothing` if the rule is not probabilistic, otherwise a `Tuple` of its t
 `Vector` of probability-rule pairs it expands into.
 """
 function parse_probabilistic_rule(e::Expr)
+	e = Base.remove_linenums!(e)
 	prvec = Tuple{Real, Any}[]
 	if e.head == :(=)
 		left = e.args[1]		# name of return type and probability
 		if left isa Expr && left.head == :call && left.args[1] == :(:)
 			p = left.args[2] 			# Probability
 			s = left.args[3]			# Return type
-			rule = e.args[2].args[2] 	# extract rule from block expr
+			rule = e.args[2].args[1] 	# extract rule from block expr
 
 			rvec = Any[]
 			parse_rule!(rvec, rule)
