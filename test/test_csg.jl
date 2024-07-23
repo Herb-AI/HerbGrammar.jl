@@ -171,6 +171,20 @@
         @test sum(map(exp, g.log_probabilities[g.bytype[:R]])) ≈ 1.0
         @test sum(map(exp, g.log_probabilities[g.bytype[:B]])) ≈ 1.0
     end
+
+    @testset "Creating a non-probabilistic rule in a PCSG" begin
+        expected_log = (
+            :error,
+            "Rule without probability encountered in probabilistic grammar. Rule ignored."
+        )
+
+        @test_logs expected_log match_mode=:any begin
+            @pcsgrammar begin
+                0.5 : R = x
+                R = R + R
+            end
+        end
+    end
     
     @testset "Test that strict equality is used during rule creation" begin
         g₁ = @csgrammar begin
