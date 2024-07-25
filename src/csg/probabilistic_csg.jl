@@ -36,17 +36,6 @@ function expr2pcsgrammar(ex::Expr)::ContextSensitiveGrammar
 		end
 	end
 	alltypes = collect(keys(bytype))
-	# Normalize probabilities for each type
-	for t ∈ alltypes
-		total_prob = sum(probabilities[i] for i ∈ bytype[t])
-		if !(total_prob ≈ 1)
-			@warn "The probabilities for type $t don't add up to 1, so they will be normalized."
-			for i ∈ bytype[t]
-				probabilities[i] /= total_prob
-			end
-		end
-	end
-
 	log_probabilities = [log(x) for x ∈ probabilities]
 	is_terminal = [isterminal(rule, alltypes) for rule in rules]
 	is_eval = [iseval(rule) for rule in rules]
@@ -63,13 +52,14 @@ Returns `nothing` if the rule is not probabilistic, otherwise a `Tuple` of its t
 `Vector` of probability-rule pairs it expands into.
 """
 function parse_probabilistic_rule(e::Expr)
+	e = Base.remove_linenums!(e)
 	prvec = Tuple{Real, Any}[]
 	if e.head == :(=)
 		left = e.args[1]		# name of return type and probability
 		if left isa Expr && left.head == :call && left.args[1] == :(:)
 			p = left.args[2] 			# Probability
 			s = left.args[3]			# Return type
-			rule = e.args[2].args[2] 	# extract rule from block expr
+			rule = e.args[2].args[1] 	# extract rule from block expr
 
 			rvec = Any[]
 			parse_rule!(rvec, rule)
@@ -149,9 +139,9 @@ The probabilities are automatically scaled if this isn't the case.
 - [`@csgrammar`](@ref) uses a similar syntax to create non-probabilistic [`ContextSensitiveGrammar`](@ref)s.
 """
 macro pcsgrammar(ex)
-	return expr2pcsgrammar(ex)
+	return :(expr2pcsgrammar($(QuoteNode(ex))))
 end
 
 macro pcfgrammar(ex)
-	return expr2pcsgrammar(ex)
+	return :(expr2pcsgrammar($(QuoteNode(ex))))
 end

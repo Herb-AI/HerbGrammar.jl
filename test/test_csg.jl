@@ -171,6 +171,20 @@
         @test sum(map(exp, g.log_probabilities[g.bytype[:R]])) ≈ 1.0
         @test sum(map(exp, g.log_probabilities[g.bytype[:B]])) ≈ 1.0
     end
+
+    @testset "Creating a non-probabilistic rule in a PCSG" begin
+        expected_log = (
+            :error,
+            "Rule without probability encountered in probabilistic grammar. Rule ignored."
+        )
+
+        @test_logs expected_log match_mode=:any begin
+            @pcsgrammar begin
+                0.5 : R = x
+                R = R + R
+            end
+        end
+    end
     
     @testset "Test that strict equality is used during rule creation" begin
         g₁ = @csgrammar begin
@@ -227,4 +241,18 @@
         @test g.bychildtypes[8] == [0, 0, 0, 0, 0, 0, 1, 1] # 7, 8
     end
 
+    @testset "Check that macros return an expr, not an object" begin
+        @test typeof(@macroexpand @csgrammar begin 
+            A = 1
+        end) == Expr
+        @test typeof(@macroexpand @cfgrammar begin 
+            A = 1
+        end) == Expr
+        @test typeof(@macroexpand @pcsgrammar begin 
+            1.0 : A = 1
+        end) == Expr
+        @test typeof(@macroexpand @pcfgrammar begin 
+            1.0 : A = 1
+        end) == Expr
+    end
 end
