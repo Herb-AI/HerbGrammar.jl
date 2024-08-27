@@ -255,4 +255,24 @@
             1.0 : A = 1
         end) == Expr
     end
+
+    @testset "Test adding duplicated rules" begin
+        g = @cfgrammar begin
+            S = 1 + A
+            S = 2 * B
+            A = 1
+            B = 1
+            B = 2
+        end
+        # All rules should be present in grammar
+        @test g.rules == [:(1 + A), :(2 * B), 1, 1, 2]
+
+        # Adding duplicated rule
+        add_rule!(g, :(A = 1))
+        @test g.rules == [:(1 + A), :(2 * B), 1, 1, 2]
+ 
+        # Adding new rule with already existing rhs
+        add_rule!(g, :(A = 2))
+        @test g.rules == [:(1 + A), :(2 * B), 1, 1, 2, 2]
+    end 
 end
