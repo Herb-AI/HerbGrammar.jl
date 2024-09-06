@@ -1,7 +1,16 @@
-HerbCore.RuleNode(ind::Int, grammar::AbstractGrammar) = RuleNode(ind, nothing, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
-HerbCore.RuleNode(ind::Int, _val::Any, grammar::AbstractGrammar) = RuleNode(ind, _val, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
+function HerbCore.RuleNode(ind::Int, grammar::AbstractGrammar)
+    RuleNode(
+        ind, nothing, [Hole(get_domain(grammar, type)) for type in grammar.childtypes[ind]])
+end
+function HerbCore.RuleNode(ind::Int, _val::Any, grammar::AbstractGrammar)
+    RuleNode(
+        ind, _val, [Hole(get_domain(grammar, type)) for type in grammar.childtypes[ind]])
+end
 
-HerbCore.UniformHole(domain::BitVector, grammar::AbstractGrammar) = UniformHole(domain, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[findfirst(domain)]])
+function HerbCore.UniformHole(domain::BitVector, grammar::AbstractGrammar)
+    UniformHole(domain,
+        [Hole(get_domain(grammar, type)) for type in grammar.childtypes[findfirst(domain)]])
+end
 
 rulesoftype(::Hole, ::Set{Int}) = Set{Int}()
 
@@ -10,9 +19,9 @@ rulesoftype(::Hole, ::Set{Int}) = Set{Int}()
 
 Returns every rule of nonterminal symbol `ruletype` that is also used in the [`AbstractRuleNode`](@ref) tree.
 """
-rulesoftype(node::RuleNode, grammar::AbstractGrammar, ruletype::Symbol) = rulesoftype(node, Set{Int}(grammar[ruletype]))
+rulesoftype(node::RuleNode, grammar::AbstractGrammar, ruletype::Symbol) = rulesoftype(
+    node, Set{Int}(grammar[ruletype]))
 rulesoftype(::Hole, ::AbstractGrammar, ::Symbol) = Set{Int}()
-
 
 """
     rulesoftype(node::RuleNode, ruleset::Set{Int}, ignoreNode::RuleNode)
@@ -36,7 +45,7 @@ function rulesoftype(node::RuleNode, ruleset::Set{Int}, ignoreNode::RuleNode)
     if isempty(node.children)
         return retval
     else
-        for child ∈ node.children
+        for child in node.children
             union!(retval, rulesoftype(child, ruleset))
         end
 
@@ -55,7 +64,8 @@ Returns every rule of nonterminal symbol `ruletype` that is also used in the [`A
 !!! warning
     The `ignoreNode` must be a subtree of `node` for it to have an effect.
 """
-rulesoftype(node::RuleNode, grammar::AbstractGrammar, ruletype::Symbol, ignoreNode::RuleNode) = rulesoftype(node, Set(grammar[ruletype]), ignoreNode)
+rulesoftype(node::RuleNode, grammar::AbstractGrammar, ruletype::Symbol, ignoreNode::RuleNode) = rulesoftype(
+    node, Set(grammar[ruletype]), ignoreNode)
 rulesoftype(::Hole, ::AbstractGrammar, ::Symbol, ::RuleNode) = Set()
 
 """
@@ -72,22 +82,20 @@ function swap_node(expr::AbstractRuleNode, new_expr::AbstractRuleNode, path::Vec
     end
 end
 
-
 """
     swap_node(expr::RuleNode, node::RuleNode, child_index::Int, new_expr::RuleNode)
 
 Replace child `i` of a node, a part of larger `expr`, with `new_expr`.
 """
 function swap_node(expr::RuleNode, node::RuleNode, child_index::Int, new_expr::RuleNode)
-    if expr == node 
+    if expr == node
         node.children[child_index] = new_expr
     else
-        for child ∈ expr.children
+        for child in expr.children
             swap_node(child, node, child_index, new_expr)
         end
     end
 end
-
 
 """
     get_rulesequence(node::RuleNode, path::Vector{Int})
@@ -105,11 +113,13 @@ function get_rulesequence(node::RuleNode, path::Vector{Int})
     elseif isassigned(path, 2)
         # at least two items are left in the path
         # need to access the child with get because it can happen that the child is not yet built
-        return append!([get_rule(node)], get_rulesequence(get(node.children, path[begin], RuleNode(0)), path[2:end]))
+        return append!([get_rule(node)],
+            get_rulesequence(get(node.children, path[begin], RuleNode(0)), path[2:end]))
     else
         # if only one item left in the path
         # need to access the child with get because it can happen that the child is not yet built
-        return append!([get_rule(node)], get_rulesequence(get(node.children, path[begin], RuleNode(0)), Vector{Int}()))
+        return append!([get_rule(node)],
+            get_rulesequence(get(node.children, path[begin], RuleNode(0)), Vector{Int}()))
     end
 end
 
@@ -130,27 +140,26 @@ function rulesonleft(node::RuleNode, path::Vector{Int})::Set{Int}
         for ch in node.children
             union!(ruleset, rulesonleft(ch, Vector{Int}()))
         end
-        return ruleset 
+        return ruleset
     elseif length(path) == 1
         # if there is only one element left in the path, collect all children except the one indicated in the path
         ruleset = Set{Int}(get_rule(node))
-        for i in 1:path[begin]-1
+        for i in 1:(path[begin] - 1)
             union!(ruleset, rulesonleft(node.children[i], Vector{Int}()))
         end
-        return ruleset 
+        return ruleset
     else
         # collect all subtrees up to the child indexed in the path
         ruleset = Set{Int}(get_rule(node))
-        for i in 1:path[begin]-1
+        for i in 1:(path[begin] - 1)
             union!(ruleset, rulesonleft(node.children[i], Vector{Int}()))
         end
         union!(ruleset, rulesonleft(node.children[path[begin]], path[2:end]))
-        return ruleset 
+        return ruleset
     end
 end
 
 rulesonleft(::Hole, ::Vector{Int}) = Set{Int}()
-
 
 """
     rulenode2expr(rulenode::AbstractRuleNode, grammar::AbstractGrammar)
@@ -164,7 +173,7 @@ function rulenode2expr(rulenode::AbstractRuleNode, grammar::AbstractGrammar)
     end
     root = deepcopy(grammar.rules[get_rule(rulenode)])
     if !grammar.isterminal[get_rule(rulenode)] # not terminal
-        root,_ = _rulenode2expr(root, rulenode, grammar)
+        root, _ = _rulenode2expr(root, rulenode, grammar)
     end
     return root
 end
@@ -175,17 +184,18 @@ function _get_hole_type(hole::AbstractHole, grammar::AbstractGrammar)
     return isnothing(index) ? :Nothing : grammar.types[index]
 end
 
-function _rulenode2expr(expr::Expr, rulenode::AbstractRuleNode, grammar::AbstractGrammar, j=0)
+function _rulenode2expr(
+        expr::Expr, rulenode::AbstractRuleNode, grammar::AbstractGrammar, j = 0)
     if isfilled(rulenode)
-        for (k,arg) in enumerate(expr.args)
+        for (k, arg) in enumerate(expr.args)
             if isa(arg, Expr)
-                expr.args[k],j = _rulenode2expr(arg, rulenode, grammar, j)
+                expr.args[k], j = _rulenode2expr(arg, rulenode, grammar, j)
             elseif haskey(grammar.bytype, arg)
-                child = rulenode.children[j+=1]
+                child = rulenode.children[j += 1]
                 if isfilled(child)
                     expr.args[k] = deepcopy(grammar.rules[get_rule(child)])
                     if !isterminal(grammar, child)
-                        expr.args[k],_ = _rulenode2expr(expr.args[k], child, grammar, 0)
+                        expr.args[k], _ = _rulenode2expr(expr.args[k], child, grammar, 0)
                     end
                 else
                     expr.args[k] = _get_hole_type(child, grammar)
@@ -196,30 +206,29 @@ function _rulenode2expr(expr::Expr, rulenode::AbstractRuleNode, grammar::Abstrac
     return expr, j
 end
 
-
-function _rulenode2expr(typ::Symbol, rulenode::AbstractRuleNode, grammar::AbstractGrammar, j=0)
+function _rulenode2expr(
+        typ::Symbol, rulenode::AbstractRuleNode, grammar::AbstractGrammar, j = 0)
     @assert isfilled(rulenode) "grammar contains a duplicate rule"
     retval = typ
     if haskey(grammar.bytype, typ)
         child = rulenode.children[1]
         retval = deepcopy(grammar.rules[get_rule(child)])
         if !grammar.isterminal[get_rule(child)]
-            retval,_ = _rulenode2expr(retval, child, grammar, 0)
+            retval, _ = _rulenode2expr(retval, child, grammar, 0)
         end
     end
     retval, j
 end
 
-
 """
 Calculates the log probability associated with a rulenode in a probabilistic grammar.
 """
 function rulenode_log_probability(node::RuleNode, grammar::AbstractGrammar)
-    return log_probability(grammar, get_rule(node)) + sum((rulenode_log_probability(c, grammar) for c ∈ node.children), init=1)
+    return log_probability(grammar, get_rule(node)) +
+           sum((rulenode_log_probability(c, grammar) for c in node.children), init = 1)
 end
 
 rulenode_log_probability(::Hole, ::AbstractGrammar) = 1
-
 
 """
     iscomplete(grammar::AbstractGrammar, node::RuleNode) 
@@ -227,7 +236,7 @@ rulenode_log_probability(::Hole, ::AbstractGrammar) = 1
 Returns true if the expression represented by the [`RuleNode`](@ref) is a complete expression, 
 meaning that it is fully defined and doesn't have any [`Hole`](@ref)s.
 """
-function iscomplete(grammar::AbstractGrammar, node::RuleNode) 
+function iscomplete(grammar::AbstractGrammar, node::RuleNode)
     if isterminal(grammar, node)
         return true
     elseif isempty(node.children)
@@ -240,14 +249,12 @@ end
 
 iscomplete(grammar::AbstractGrammar, ::Hole) = false
 
-
 """
     return_type(grammar::AbstractGrammar, node::RuleNode)
 
 Gives the return type or nonterminal symbol in the production rule used by `node`.
 """
 return_type(grammar::AbstractGrammar, node::RuleNode)::Symbol = grammar.types[get_rule(node)]
-
 
 """
     return_type(grammar::AbstractGrammar, hole::UniformHole)
@@ -256,14 +263,12 @@ Gives the return type or nonterminal symbol in the production rule used by `hole
 """
 return_type(grammar::AbstractGrammar, hole::UniformHole)::Symbol = grammar.types[findfirst(hole.domain)]
 
-
 """
     child_types(grammar::AbstractGrammar, node::RuleNode)
 
 Returns the list of child types (nonterminal symbols) in the production rule used by `node`.
 """
 child_types(grammar::AbstractGrammar, node::RuleNode)::Vector{Symbol} = grammar.childtypes[get_rule(node)]
-
 
 """
     isterminal(grammar::AbstractGrammar, node::AbstractRuleNode)::Bool
@@ -272,13 +277,13 @@ Returns true if the production rule used by `node` is terminal, i.e., does not c
 """
 isterminal(grammar::AbstractGrammar, node::AbstractRuleNode)::Bool = grammar.isterminal[get_rule(node)]
 
-
 """
     nchildren(grammar::AbstractGrammar, node::RuleNode)::Int
 
 Returns the number of children in the production rule used by `node`.
 """
-nchildren(grammar::AbstractGrammar, node::RuleNode)::Int = length(child_types(grammar, node))
+nchildren(grammar::AbstractGrammar, node::RuleNode)::Int = length(child_types(
+    grammar, node))
 
 """
     isvariable(grammar::AbstractGrammar, node::RuleNode)::Bool
@@ -332,13 +337,14 @@ isvariable(grammar::AbstractGrammar, ind::Int, mod::Module...)::Bool = (
 Returns true if the tree rooted at `node` contains at least one node at depth less than `maxdepth`
 with the given return type or nonterminal symbol.
 """
-function contains_returntype(node::RuleNode, grammar::AbstractGrammar, sym::Symbol, maxdepth::Int=typemax(Int))
+function contains_returntype(
+        node::RuleNode, grammar::AbstractGrammar, sym::Symbol, maxdepth::Int = typemax(Int))
     maxdepth < 1 && return false
     if return_type(grammar, node) == sym
         return true
     end
     for c in node.children
-        if contains_returntype(c, grammar, sym, maxdepth-1)
+        if contains_returntype(c, grammar, sym, maxdepth - 1)
             return true
         end
     end

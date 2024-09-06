@@ -28,7 +28,6 @@ function Base.get(root::AbstractRuleNode, loc::NodeLoc)
     end
 end
 
-
 """
 insert!(loc::NodeLoc, rulenode::RuleNode)
 Replaces the subtree pointed to by loc with the given rulenode.
