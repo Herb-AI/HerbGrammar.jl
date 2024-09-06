@@ -2,7 +2,6 @@
 AbstractTrees.children(node::RuleNode) = node.children
 AbstractTrees.printnode(io::IO, node::RuleNode) = print(io, node.ind)
 
-
 """
     mindepth_map(grammar::AbstractGrammar)
 
@@ -11,8 +10,9 @@ In other words, this function finds the depths of the lowest trees that can be m
 using each of the available production rules as a root.
 """
 function mindepth_map(grammar::AbstractGrammar)
-    dmap0 = Int[isterminal(grammar,i) ? 1 : typemax(Int)/2 for i in eachindex(grammar.rules)]
-    dmap1 = fill(-1, length(grammar.rules)) 
+    dmap0 = Int[isterminal(grammar, i) ? 1 : typemax(Int) / 2
+                for i in eachindex(grammar.rules)]
+    dmap1 = fill(-1, length(grammar.rules))
     while dmap0 != dmap1
         for i in eachindex(grammar.rules)
             dmap1[i] = _mindepth(grammar, i, dmap0)
@@ -22,12 +22,11 @@ function mindepth_map(grammar::AbstractGrammar)
     dmap0
 end
 
-
 function _mindepth(grammar::AbstractGrammar, rule_index::Int, dmap::AbstractVector{Int})
     isterminal(grammar, rule_index) && return 1
-    return 1 + maximum([mindepth(grammar, ctyp, dmap) for ctyp in child_types(grammar, rule_index)])
+    return 1 + maximum([mindepth(grammar, ctyp, dmap)
+                    for ctyp in child_types(grammar, rule_index)])
 end
-
 
 """
     mindepth(grammar::AbstractGrammar, typ::Symbol, dmap::AbstractVector{Int})
@@ -45,7 +44,7 @@ end
 
 Data structure for mapping terminal symbols in the [`AbstractGrammar`](@ref) to their Julia interpretation.
 """
-const SymbolTable = Dict{Symbol,Any}
+const SymbolTable = Dict{Symbol, Any}
 
 """
     SymbolTable(grammar::AbstractGrammar, mod::Module=Main)
@@ -53,7 +52,7 @@ const SymbolTable = Dict{Symbol,Any}
 Returns a [`SymbolTable`](@ref) populated with a mapping from symbols in the 
 [`AbstractGrammar`](@ref) to symbols in module `mod` or `Main`, if defined.
 """
-function HerbGrammar.SymbolTable(grammar::AbstractGrammar, mod::Module=Main)
+function HerbGrammar.SymbolTable(grammar::AbstractGrammar, mod::Module = Main)
     tab = SymbolTable()
     for rule in grammar.rules
         _add_to_symboltable!(tab, rule, mod)
@@ -61,15 +60,13 @@ function HerbGrammar.SymbolTable(grammar::AbstractGrammar, mod::Module=Main)
     tab
 end
 
-
 _add_to_symboltable!(tab::SymbolTable, rule::Any, mod::Module) = true
-
 
 function _add_to_symboltable!(tab::SymbolTable, rule::Expr, mod::Module)
     if rule.head == :call && !iseval(rule)
         s = rule.args[1]
         if !_add_to_symboltable!(tab, s, mod)
-            @warn "Unable to add function $s to symbol table"  
+            @warn "Unable to add function $s to symbol table"
         end
         for s in rule.args[2:end]  #nested exprs
             _add_to_symboltable!(tab, s, mod)
@@ -98,7 +95,6 @@ function _add_to_symboltable!(tab::SymbolTable, s::Symbol, mod::Module)
     return _apply_if_defined_in_modules(_add_to_table!, s, [mod, Base, Main])
 end
 
-
 """
     containedin(vec1::Vector, vec2::Vector)
 
@@ -111,7 +107,7 @@ function containedin(vec1::Vector, vec2::Vector)
         if vec1_index > max_elements
             return true
         end
-        
+
         if item == vec1[vec1_index]
             vec1_index += 1  # increase the index every time we encounter the matching element
         end
@@ -119,7 +115,6 @@ function containedin(vec1::Vector, vec2::Vector)
 
     return vec1_index > max_elements
 end
-
 
 """
     subsequenceof(vec1::Vector{Int}, vec2::Vector{Int})
@@ -135,18 +130,18 @@ function subsequenceof(vec1::Vector{Int}, vec2::Vector{Int})
         vec2_elem = vec2[vec2_index]
         vec1_elem = get(vec1, vec1_index, nothing)
 
-        if vec1_elem === nothing 
+        if vec1_elem === nothing
             break
         end
 
-        if vec1_elem == vec2_elem && (last_found_vec1_element_ind == 0 || last_found_vec1_element_ind == vec2_index - 1)
+        if vec1_elem == vec2_elem && (last_found_vec1_element_ind == 0 ||
+            last_found_vec1_element_ind == vec2_index - 1)
             vec1_index += 1
             last_found_vec1_element_ind = vec2_index
         end
 
         vec2_index += 1
     end
-    
-    return get(vec1, vec1_index, nothing) === nothing
 
+    return get(vec1, vec1_index, nothing) === nothing
 end

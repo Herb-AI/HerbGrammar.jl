@@ -6,7 +6,7 @@ For example, :(x) is terminal, and :(1+1) is terminal, but :(Real + Real) is typ
 """
 function isterminal(rule::Any, types::AbstractVector{Symbol})
     if isa(rule, Expr)
-        for arg ∈ rule.args
+        for arg in rule.args
             if !isterminal(arg, types)
                 return false
             end
@@ -14,7 +14,6 @@ function isterminal(rule::Any, types::AbstractVector{Symbol})
     end
     return rule ∉ types
 end
-
 
 """
     iseval(rule)
@@ -27,7 +26,6 @@ Returns true if the rule is the special evaluate immediately function, i.e., _()
 iseval(rule) = false
 iseval(rule::Expr) = (rule.head == :call && rule.args[1] == :_)
 
-
 """
     get_childtypes(rule::Any, types::AbstractVector{Symbol})
 
@@ -36,7 +34,7 @@ Returns the child types/nonterminals of a production rule.
 function get_childtypes(rule::Any, types::AbstractVector{Symbol})
     retval = Symbol[]
     if isa(rule, Expr)
-        for arg ∈ rule.args
+        for arg in rule.args
             append!(retval, get_childtypes(arg, types))
         end
     elseif rule ∈ types
@@ -54,7 +52,6 @@ Returns a list of the nonterminals or types in the [`AbstractGrammar`](@ref).
 """
 nonterminals(grammar::AbstractGrammar)::Vector{Symbol} = collect(keys(grammar.bytype))
 
-
 """
     return_type(grammar::AbstractGrammar, rule_index::Int)::Symbol
 
@@ -62,14 +59,12 @@ Returns the type of the production rule at `rule_index`.
 """
 return_type(grammar::AbstractGrammar, rule_index::Int) = grammar.types[rule_index]
 
-
 """
     child_types(grammar::AbstractGrammar, rule_index::Int)
 
 Returns the types of the children (nonterminals) of the production rule at `rule_index`.
 """
 child_types(grammar::AbstractGrammar, rule_index::Int) = grammar.childtypes[rule_index]
-
 
 """
     get_domain(g::AbstractGrammar, type::Symbol)::BitVector
@@ -83,14 +78,13 @@ rules in the grammar. Bit `i` is set to `true` iff rule `i` is of type `type`.
 """
 get_domain(g::AbstractGrammar, type::Symbol)::BitVector = deepcopy(g.domains[type])
 
-
 """
     get_domain(g::AbstractGrammar, rules::Vector{Int})::BitVector
 
 Takes a domain `rules` defined as a vector of ints and converts it to a domain defined as a `BitVector`.
 """
-get_domain(g::AbstractGrammar, rules::Vector{Int})::BitVector = BitArray(r ∈ rules for r ∈ 1:length(g.rules))
-
+get_domain(g::AbstractGrammar, rules::Vector{Int})::BitVector = BitArray(r ∈ rules
+for r in 1:length(g.rules))
 
 """
     isterminal(grammar::AbstractGrammar, rule_index::Int)::Bool
@@ -98,7 +92,6 @@ get_domain(g::AbstractGrammar, rules::Vector{Int})::BitVector = BitArray(r ∈ r
 Returns true if the production rule at `rule_index` is terminal, i.e., does not contain any nonterminal symbols.
 """
 isterminal(grammar::AbstractGrammar, rule_index::Int)::Bool = grammar.isterminal[rule_index]
-
 
 """
     iseval(grammar::AbstractGrammar)::Bool
@@ -111,7 +104,6 @@ Returns true if any production rules in grammar contain the special _() eval fun
 """
 iseval(grammar::AbstractGrammar)::Bool = any(grammar.iseval)
 
-
 """
     iseval(grammar::AbstractGrammar, index::Int)::Bool
 
@@ -122,7 +114,6 @@ Returns true if the production rule at rule_index contains the special _() eval 
 
 """
 iseval(grammar::AbstractGrammar, index::Int)::Bool = grammar.iseval[index]
-
 
 """
     log_probability(grammar::AbstractGrammar, index::Int)::Real
@@ -166,14 +157,12 @@ Function returns whether a [`AbstractGrammar`](@ref) is probabilistic.
 """
 isprobabilistic(grammar::AbstractGrammar)::Bool = !(grammar.log_probabilities ≡ nothing)
 
-
 """
     nchildren(grammar::AbstractGrammar, rule_index::Int)::Int
 
 Returns the number of children (nonterminals) of the production rule at `rule_index`.
 """
 nchildren(grammar::AbstractGrammar, rule_index::Int)::Int = length(grammar.childtypes[rule_index])
-
 
 """
     max_arity(grammar::AbstractGrammar)::Int
@@ -182,13 +171,11 @@ Returns the maximum arity (number of children) over all production rules in the 
 """
 max_arity(grammar::AbstractGrammar)::Int = maximum(length(cs) for cs in grammar.childtypes)
 
-
 function Base.show(io::IO, grammar::AbstractGrammar)
     for i in eachindex(grammar.rules)
         println(io, i, ": ", grammar.types[i], " = ", grammar.rules[i])
     end
 end
-
 
 """
     add_rule!(g::AbstractGrammar, e::Expr)
@@ -206,15 +193,16 @@ The syntax is identical to the syntax of [`@csgrammar`](@ref) and [`@cfgrammar`]
 """
 function add_rule!(g::AbstractGrammar, e::Expr)
     if e.head == :(=) && typeof(e.args[1]) == Symbol
-        s = e.args[1]		# Name of return type
-        rule = e.args[2]	# expression?
+        s = e.args[1]# Name of return type
+        rule = e.args[2]# expression?
         rvec = Any[]
         parse_rule!(rvec, rule)
-        for r ∈ rvec
+        for r in rvec
             # Only add a rule if it does not exist yet. Check for existance
             # with strict equality so that true and 1 are not considered
             # equal. that means we can't use `in` or `∈` for equality checking.
-            if !any(s == type && (r === rule || typeof(r)==Expr && r == rule) for (type, rule) ∈ zip(g.types, g.rules))
+            if !any(s == type && (r === rule || typeof(r) == Expr && r == rule)
+            for (type, rule) in zip(g.types, g.rules))
                 push!(g.rules, r)
                 push!(g.iseval, iseval(rule))
                 push!(g.types, s)
@@ -228,10 +216,12 @@ function add_rule!(g::AbstractGrammar, e::Expr)
 
     # is_terminal and childtypes need to be recalculated from scratch, since a new type might 
     # be added that was used as a terminal symbol before.
-    g.isterminal = [isterminal(rule, alltypes) for rule ∈ g.rules]
-    g.childtypes = [get_childtypes(rule, alltypes) for rule ∈ g.rules]
-    g.bychildtypes = [BitVector([g.childtypes[i1] == g.childtypes[i2] for i2 ∈ 1:length(g.rules)]) for i1 ∈ 1:length(g.rules)]
-    g.domains = Dict(type => BitArray(r ∈ g.bytype[type] for r ∈ 1:length(g.rules)) for type ∈ keys(g.bytype))
+    g.isterminal = [isterminal(rule, alltypes) for rule in g.rules]
+    g.childtypes = [get_childtypes(rule, alltypes) for rule in g.rules]
+    g.bychildtypes = [BitVector([g.childtypes[i1] == g.childtypes[i2]
+                                 for i2 in 1:length(g.rules)]) for i1 in 1:length(g.rules)]
+    g.domains = Dict(type => BitArray(r ∈ g.bytype[type] for r in 1:length(g.rules))
+    for type in keys(g.bytype))
     return g
 end
 
@@ -239,7 +229,8 @@ end
 Adds a probabilistic derivation rule.
 """
 function add_rule!(g::AbstractGrammar, p::Real, e::Expr)
-    isprobabilistic(g) || throw(ArgumentError("adding a probabilistic rule to a non-probabilistic grammar"))
+    isprobabilistic(g) ||
+        throw(ArgumentError("adding a probabilistic rule to a non-probabilistic grammar"))
     len₀ = length(g.rules)
     add_rule!(g, e)
     len₁ = length(g.rules)
@@ -265,16 +256,17 @@ function remove_rule!(g::AbstractGrammar, idx::Int)
         # remove type
         delete!(g.bytype, type)
         alltypes = collect(keys(g.bytype))
-        g.isterminal = [isterminal(rule, alltypes) for rule ∈ g.rules]
-        g.childtypes = [get_childtypes(rule, alltypes) for rule ∈ g.rules]
-        g.bychildtypes = [BitVector([g.childtypes[i1] == g.childtypes[i2] for i2 ∈ 1:length(g.rules)]) for i1 ∈ 1:length(g.rules)]
+        g.isterminal = [isterminal(rule, alltypes) for rule in g.rules]
+        g.childtypes = [get_childtypes(rule, alltypes) for rule in g.rules]
+        g.bychildtypes = [BitVector([g.childtypes[i1] == g.childtypes[i2]
+                                     for i2 in 1:length(g.rules)])
+                          for i1 in 1:length(g.rules)]
     end
-    for domain ∈ values(g.domains)
+    for domain in values(g.domains)
         domain[idx] = 0
     end
     return g
 end
-
 
 """
     cleanup_removed_rules!(g::AbstractGrammar)
@@ -290,15 +282,16 @@ This means that indices get shifted.
 function cleanup_removed_rules!(g::AbstractGrammar)
     rules_to_cleanup = findall(isequal(nothing), g.rules)
     # highest indices are removed first, otherwise their index will have shifted
-    for v ∈ [g.rules, g.types, g.isterminal, g.iseval, g.childtypes]
+    for v in [g.rules, g.types, g.isterminal, g.iseval, g.childtypes]
         deleteat!(v, rules_to_cleanup)
     end
     # update bytype
     empty!(g.bytype)
 
-    for (idx, type) ∈ enumerate(g.types)
+    for (idx, type) in enumerate(g.types)
         g.bytype[type] = push!(get(g.bytype, type, Int[]), idx)
     end
-    g.domains = Dict(type => BitArray(r ∈ g.bytype[type] for r ∈ 1:length(g.rules)) for type ∈ keys(g.bytype))
+    g.domains = Dict(type => BitArray(r ∈ g.bytype[type] for r in 1:length(g.rules))
+    for type in keys(g.bytype))
     return g
 end

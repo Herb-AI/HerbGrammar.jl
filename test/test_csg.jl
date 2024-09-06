@@ -19,21 +19,20 @@
         @test :Real ∈ g₁.types
 
         g₂ = @cfgrammar begin
-            Real = |([1,2,3])
+            Real = |([1, 2, 3])
         end
-        @test g₂.rules == [1,2,3]
+        @test g₂.rules == [1, 2, 3]
 
         g₃ = @cfgrammar begin
             Real = 1 | 2 | 3
         end
-        @test g₃.rules == [1,2,3]
+        @test g₃.rules == [1, 2, 3]
 
         g₄ = @cfgrammar begin
             Real = 1 | 1
         end
         @test g₄.rules == [1]
     end
-
 
     @testset "Adding rules to grammar" begin
         g₁ = @csgrammar begin
@@ -99,7 +98,7 @@
             Real = |(1:5)
             Real = 6 | 7 | 8
         end
-        
+
         store_csg(g₁, "toy_cfg.grammar")
         g₂ = read_csg("toy_cfg.grammar")
         @test :Real ∈ g₂.types
@@ -111,16 +110,15 @@
 
     @testset "Writing and loading probabilistic CSG to/from disk" begin
         g₁ = @pcsgrammar begin
-            0.5 : Real = |(0:3)
-            0.5 : Real = x
+            0.5:Real = |(0:3)
+            0.5:Real = x
         end
-        
+
         store_csg(g₁, "toy_pcfg.grammar")
         g₂ = read_pcsg("toy_pcfg.grammar")
         @test :Real ∈ g₂.types
         @test g₂.rules == [0, 1, 2, 3, :x]
         @test g₂.log_probabilities == g₁.log_probabilities
-
 
         # delete file afterwards
         rm("toy_pcfg.grammar")
@@ -128,45 +126,45 @@
 
     @testset "creating probabilistic CSG" begin
         g = @pcsgrammar begin
-            0.5 : R = |(0:2)
-            0.3 : R = x
-            0.2 : B = true | false
+            0.5:R = |(0:2)
+            0.3:R = x
+            0.2:B = true | false
         end
-        
+
         @test sum(map(exp, g.log_probabilities[g.bytype[:R]])) ≈ 1.0
         @test sum(map(exp, g.log_probabilities[g.bytype[:B]])) ≈ 1.0
-        @test g.bytype[:R] == Int[1,2,3,4]
-        @test g.bytype[:B] == Int[5,6]
+        @test g.bytype[:R] == Int[1, 2, 3, 4]
+        @test g.bytype[:B] == Int[5, 6]
         @test :R ∈ g.types && :B ∈ g.types
     end
 
     @testset "creating a non-normalized PCSG" begin
         g = @pcsgrammar begin
-            0.5 : R = |(0:2)
-            0.5 : R = x
-            0.5 : B = true | false
+            0.5:R = |(0:2)
+            0.5:R = x
+            0.5:B = true | false
         end
-        
+
         @test sum(map(exp, g.log_probabilities[g.bytype[:R]])) ≈ 1.0
         @test sum(map(exp, g.log_probabilities[g.bytype[:B]])) ≈ 1.0
         @test g.rules == [0, 1, 2, :x, :true, :false]
-        @test g.bytype[:R] == Int[1,2,3,4]
-        @test g.bytype[:B] == Int[5,6]
+        @test g.bytype[:R] == Int[1, 2, 3, 4]
+        @test g.bytype[:B] == Int[5, 6]
         @test :R ∈ g.types && :B ∈ g.types
     end
 
     @testset "Adding a rule to a probabilistic CSG" begin
         g = @pcsgrammar begin
-            0.5 : R = x
-            0.5 : R = R + R
+            0.5:R = x
+            0.5:R = R + R
         end
 
         add_rule!(g, 0.5, :(R = 1 | 2))
 
         @test g.rules == [:x, :(R + R), 1, 2]
-        
+
         add_rule!(g, 0.5, :(B = t | f))
-        
+
         @test g.bytype[:B] == Int[5, 6]
         @test sum(map(exp, g.log_probabilities[g.bytype[:R]])) ≈ 1.0
         @test sum(map(exp, g.log_probabilities[g.bytype[:B]])) ≈ 1.0
@@ -180,12 +178,12 @@
 
         @test_logs expected_log match_mode=:any begin
             @pcsgrammar begin
-                0.5 : R = x
+                0.5:R = x
                 R = R + R
             end
         end
     end
-    
+
     @testset "Test that strict equality is used during rule creation" begin
         g₁ = @csgrammar begin
             R = x
@@ -194,7 +192,7 @@
 
         add_rule!(g₁, :(R = 1 | 2))
 
-        add_rule!(g₁,:(Bool = true))
+        add_rule!(g₁, :(Bool = true))
 
         @test all(g₁.rules .== [:x, :(R + R), 1, 2, true])
 
@@ -203,7 +201,7 @@
             R = R + R
         end
 
-        add_rule!(g₁,:(Bool = true))
+        add_rule!(g₁, :(Bool = true))
 
         add_rule!(g₁, :(R = 1 | 2))
 
@@ -221,7 +219,7 @@
             S = 7 + S
             A = 8 + S
         end
-        
+
         @test g.childtypes[1] == []
         @test g.childtypes[2] == [:S, :A]
         @test g.childtypes[3] == [:A, :S]
@@ -230,7 +228,7 @@
         @test g.childtypes[6] == [:S, :S]
         @test g.childtypes[7] == [:S]
         @test g.childtypes[8] == [:S]
-        
+
         @test g.bychildtypes[1] == [1, 0, 0, 1, 0, 0, 0, 0] # 1, 4
         @test g.bychildtypes[2] == [0, 1, 0, 0, 0, 0, 0, 0] # 2
         @test g.bychildtypes[3] == [0, 0, 1, 0, 0, 0, 0, 0] # 3
@@ -242,17 +240,17 @@
     end
 
     @testset "Check that macros return an expr, not an object" begin
-        @test typeof(@macroexpand @csgrammar begin 
+        @test typeof(@macroexpand @csgrammar begin
             A = 1
         end) == Expr
-        @test typeof(@macroexpand @cfgrammar begin 
+        @test typeof(@macroexpand @cfgrammar begin
             A = 1
         end) == Expr
-        @test typeof(@macroexpand @pcsgrammar begin 
-            1.0 : A = 1
+        @test typeof(@macroexpand @pcsgrammar begin
+            1.0:A = 1
         end) == Expr
-        @test typeof(@macroexpand @pcfgrammar begin 
-            1.0 : A = 1
+        @test typeof(@macroexpand @pcfgrammar begin
+            1.0:A = 1
         end) == Expr
     end
 
@@ -270,9 +268,9 @@
         # Adding duplicated rule
         add_rule!(g, :(A = 1))
         @test g.rules == [:(1 + A), :(2 * B), 1, 1, 2]
- 
+
         # Adding new rule with already existing rhs
         add_rule!(g, :(A = 2))
         @test g.rules == [:(1 + A), :(2 * B), 1, 1, 2, 2]
-    end 
+    end
 end
