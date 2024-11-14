@@ -18,9 +18,6 @@ include("csg/probabilistic_csg.jl")
 include("grammar_io.jl")
 
 export 
-    ContextFree, 
-    ContextSensitive,
-
     ContextSensitiveGrammar,
     AbstractRuleNode,
     RuleNode,
@@ -58,7 +55,6 @@ export
 
     SymbolTable,
     
-    change_expr,
     rulenode2expr,
     rulenode_log_probability,
 
