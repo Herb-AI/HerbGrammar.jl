@@ -40,7 +40,7 @@ end
 
 Data structure for mapping terminal symbols in the [`AbstractGrammar`](@ref) to their Julia interpretation.
 """
-const SymbolTable{I} = Dict{Symbol,I}
+const SymbolTable = Dict{Symbol,Any}
 
 """
     grammar2symboltable(grammar::AbstractGrammar, mod::Module=Main)

@@ -54,6 +54,7 @@ export
     expr2pcsgrammar,
 
     SymbolTable,
+    grammar2symboltable,
     
     rulenode2expr,
     rulenode_log_probability,
