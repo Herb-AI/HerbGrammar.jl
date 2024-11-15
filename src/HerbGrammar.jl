@@ -70,6 +70,7 @@ export
     read_csg,
     read_pcsg,
     add_rule!,
+    extend_grammar!,
     remove_rule!,
     cleanup_removed_rules!
 
