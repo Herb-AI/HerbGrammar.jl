@@ -1,7 +1,6 @@
 module HerbGrammar
 
 import TreeView: walk_tree
-using AbstractTrees
 using DataStructures # NodeRecycler
 using Serialization # grammar_io
 

@@ -1,8 +1,3 @@
-# Interface to AbstractTrees.jl
-AbstractTrees.children(node::RuleNode) = node.children
-AbstractTrees.printnode(io::IO, node::RuleNode) = print(io, node.ind)
-
-
 """
     mindepth_map(grammar::AbstractGrammar)
 
@@ -45,15 +40,15 @@ end
 
 Data structure for mapping terminal symbols in the [`AbstractGrammar`](@ref) to their Julia interpretation.
 """
-const SymbolTable = Dict{Symbol,Any}
+const SymbolTable{I} = Dict{Symbol,I}
 
 """
-    SymbolTable(grammar::AbstractGrammar, mod::Module=Main)
+    grammar2symboltable(grammar::AbstractGrammar, mod::Module=Main)
 
 Returns a [`SymbolTable`](@ref) populated with a mapping from symbols in the 
 [`AbstractGrammar`](@ref) to symbols in module `mod` or `Main`, if defined.
 """
-function HerbGrammar.SymbolTable(grammar::AbstractGrammar, mod::Module=Main)
+function grammar2symboltable(grammar::AbstractGrammar, mod::Module=Main)
     tab = SymbolTable()
     for rule in grammar.rules
         _add_to_symboltable!(tab, rule, mod)
