@@ -212,6 +212,136 @@ end
 
 
 """
+    expr2ulenode(expr::Expr, grammar::ContextSensitiveGrammar)
+
+Converts an expression into a [`AbstractRuleNode`](@ref) corresponding to the rule definitions in the grammar.
+"""
+
+function grammar_map_right_to_left(grammar::ContextSensitiveGrammar)
+    tags = Dict{Any,Any}()
+    for (l, r) in zip(grammar.types, grammar.rules)
+        tags[r] = l
+    end
+    return tags
+end
+
+function _expr2rulenode(expr::Expr, grammar::ContextSensitiveGrammar, tags::Dict{Any,Any})
+    if expr.head == :call 
+
+        if !haskey(tags, expr)
+       
+            parameters = [_expr2rulenode(expr.args[i], grammar, tags) for i in (2:length(expr.args))]
+            pl = map( x -> x[1], parameters)
+            pr = map( x -> x[2], parameters)
+            
+            temp = [expr.args[1] ;pl]
+            newexpr = Expr(:call, temp...)
+            rule = findfirst(==(newexpr), grammar.rules)
+
+
+            oldpl = copy(pl)
+            oldpr = copy(pr)
+            pnr = length(pl)
+
+            while isnothing(rule)
+                
+                updatedrule = findfirst(==(pl[pnr]), grammar.rules)     
+                
+                if isnothing(updatedrule)
+                    pl[pnr] = oldpl[pnr]
+                    pr[pnr] = oldpr[pnr]
+                    pnr = pnr - 1
+                    continue
+                end
+
+                pl[pnr] = tags[pl[pnr]]
+                pr[pnr] = RuleNode(updatedrule, [pr[pnr]])
+  
+                temp = [expr.args[1] ;pl]
+                newexpr = Expr(:call, temp...)
+                rule = findfirst(==(newexpr), grammar.rules)
+                
+                pnr = length(pl)
+            end
+            return (tags[newexpr], RuleNode(rule, pr))
+        else 
+            rule = findfirst(==(expr), grammar.rules)
+            return (tags[expr], RuleNode(rule, []))
+        end
+    elseif expr.head == :block
+        (l1, r1) = _expr2rulenode( expr.args[1], grammar, tags)
+        (l2, r2) = _expr2rulenode( expr.args[3], grammar, tags)
+        
+        temp = (l1, l2)
+
+        newexpr = Expr(:block, temp...)
+        rule = findfirst(==(newexpr), grammar.rules)
+
+        pl = [l1, l2]
+        pr = [r1, r2]
+
+        oldpl = copy(pl)
+        oldpr = copy(pr)
+        pnr = length(pl)
+
+        while isnothing(rule)
+            
+            updatedrule = findfirst(==(pl[pnr]), grammar.rules)     
+            
+            if isnothing(updatedrule)
+                pl[pnr] = oldpl[pnr]
+                pr[pnr] = oldpr[pnr]
+                pnr = pnr - 1
+                continue
+            end
+            
+            pl[pnr] = tags[pl[pnr]]
+            pr[pnr] = RuleNode(updatedrule, [pr[pnr]])
+            
+            temp = (pl[1], pl[2])
+            newexpr = Expr(:block, temp...)
+            rule = findfirst(==(newexpr), grammar.rules)
+            
+            pnr = length(pl)
+        end
+        return (tags[newexpr], RuleNode(rule, pr))
+        
+    elseif expr.head == :quote
+        return _expr2rulenode(expr.args[1], grammar, tags)
+    else
+        error("Only call and block expressions are supported")
+    end
+end
+
+function _expr2rulenode(expr::Any, grammar::ContextSensitiveGrammar, tags::Dict{Any,Any})
+    rule = findfirst(==(expr), grammar.rules)
+    return (tags[expr], RuleNode(rule, []))
+end
+
+function expr2rulenode(expr::Expr, grammar::ContextSensitiveGrammar, startSymbol::Symbol)
+    tags = grammar_map_right_to_left(grammar)
+    (s, rn) = _expr2rulenode(expr, grammar, tags)
+    while s != startSymbol
+            
+        updatedrule = findfirst(==(s), grammar.rules)     
+        
+        if isnothing(updatedrule)
+            error("INVALID STARTING SYMBOL")
+        end
+            
+        s = tags[s]
+        rn = RuleNode(updatedrule, [rn])
+    end
+    return rn
+end
+
+function expr2rulenode(expr::Expr, grammar::ContextSensitiveGrammar)
+    tags = grammar_map_right_to_left(grammar)
+    (s, rn) = _expr2rulenode(expr, grammar, tags)
+    return rn
+end
+
+"""
 Calculates the log probability associated with a rulenode in a probabilistic grammar.
 """
 function rulenode_log_probability(node::RuleNode, grammar::AbstractGrammar)
