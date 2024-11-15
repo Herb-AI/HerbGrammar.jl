@@ -1,7 +1,6 @@
 module HerbGrammar
 
 import TreeView: walk_tree
-using AbstractTrees
 using DataStructures # NodeRecycler
 using Serialization # grammar_io
 
@@ -18,9 +17,6 @@ include("csg/probabilistic_csg.jl")
 include("grammar_io.jl")
 
 export 
-    ContextFree, 
-    ContextSensitive,
-
     ContextSensitiveGrammar,
     AbstractRuleNode,
     RuleNode,
@@ -57,8 +53,8 @@ export
     expr2pcsgrammar,
 
     SymbolTable,
+    grammar2symboltable,
     
-    change_expr,
     rulenode2expr,
     rulenode_log_probability,
 
