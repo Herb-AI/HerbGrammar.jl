@@ -212,12 +212,12 @@ end
 
 
 """
-    expr2ulenode(expr::Expr, grammar::ContextSensitiveGrammar)
+    expr2ulenode(expr::Expr, grammar::AbstractGrammar)
 
 Converts an expression into a [`AbstractRuleNode`](@ref) corresponding to the rule definitions in the grammar.
 """
 
-function grammar_map_right_to_left(grammar::ContextSensitiveGrammar)
+function grammar_map_right_to_left(grammar::AbstractGrammar)
     tags = Dict{Any,Any}()
     for (l, r) in zip(grammar.types, grammar.rules)
         tags[r] = l
@@ -225,7 +225,7 @@ function grammar_map_right_to_left(grammar::ContextSensitiveGrammar)
     return tags
 end
 
-function _expr2rulenode(expr::Expr, grammar::ContextSensitiveGrammar, tags::Dict{Any,Any})
+function _expr2rulenode(expr::Expr, grammar::AbstractGrammar, tags::Dict{Any,Any})
     if expr.head == :call 
 
         if !haskey(tags, expr)
@@ -313,12 +313,12 @@ function _expr2rulenode(expr::Expr, grammar::ContextSensitiveGrammar, tags::Dict
     end
 end
 
-function _expr2rulenode(expr::Any, grammar::ContextSensitiveGrammar, tags::Dict{Any,Any})
+function _expr2rulenode(expr::Any, grammar::AbstractGrammar, tags::Dict{Any,Any})
     rule = findfirst(==(expr), grammar.rules)
     return (tags[expr], RuleNode(rule, []))
 end
 
-function expr2rulenode(expr::Expr, grammar::ContextSensitiveGrammar, startSymbol::Symbol)
+function expr2rulenode(expr::Expr, grammar::AbstractGrammar, startSymbol::Symbol)
     tags = grammar_map_right_to_left(grammar)
     (s, rn) = _expr2rulenode(expr, grammar, tags)
     while s != startSymbol
@@ -335,7 +335,7 @@ function expr2rulenode(expr::Expr, grammar::ContextSensitiveGrammar, startSymbol
     return rn
 end
 
-function expr2rulenode(expr::Expr, grammar::ContextSensitiveGrammar)
+function expr2rulenode(expr::Expr, grammar::AbstractGrammar)
     tags = grammar_map_right_to_left(grammar)
     (s, rn) = _expr2rulenode(expr, grammar, tags)
     return rn
