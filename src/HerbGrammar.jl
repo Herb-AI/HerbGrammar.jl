@@ -50,6 +50,7 @@ export
     clearconstraints!,
     addconstraint!,
     merge_grammars!,
+    expr2rulenode,
 
     @pcfgrammar,
 
