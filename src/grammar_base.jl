@@ -235,20 +235,25 @@ function add_rule!(g::AbstractGrammar, e::Expr)
     return g
 end
 
+
 """
-    extend_grammar(tree, grammar)
-Extends a given grammar with a Herb tree.
+    add_rule(grammar, tree)
+
+Extends a given grammar with an `AbstractRuleNode`. The type of the rule is inferred from the root-type.
 # Arguments
-- `tree::RuleNode`: the Herb tree
 - `grammar::AbstractGrammar`: the grammar to extend
+- `tree::RuleNode`: the Herb tree
 """
-function extend_grammar!(tree, grammar)
+function add_rule!(grammar::AbstractGrammar, tree::AbstractRuleNode)
     type = return_type(grammar, tree.ind)
     new_grammar_rule = rulenode2expr(tree, grammar)
     add_rule!(grammar, :($type = $new_grammar_rule))
 end
 
+
 """
+    add_rule!(g::AbstractGrammar, p::Real, e::Expr)
+
 Adds a probabilistic derivation rule.
 """
 function add_rule!(g::AbstractGrammar, p::Real, e::Expr)
