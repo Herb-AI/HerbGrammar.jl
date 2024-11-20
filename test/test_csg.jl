@@ -275,4 +275,18 @@
         add_rule!(g, :(A = 2))
         @test g.rules == [:(1 + A), :(2 * B), 1, 1, 2, 2]
     end 
+
+    @testset "Add tree to grammar" begin 
+        g = @cfgrammar begin
+            Number = |(1:2)
+            Number = x
+            Number = Number + Number 
+            Number = Number * Number
+        end
+        hole = Hole(get_domain(g, g.bytype[:Number]))
+        test_ast = RuleNode(4, [RuleNode(1), hole])
+        
+        add_rule!(g, test_ast)
+        @test g.rules[6] == :(1 + Number)
+    end
 end
