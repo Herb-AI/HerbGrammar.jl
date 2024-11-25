@@ -341,6 +341,29 @@ function expr2rulenode(expr::Expr, grammar::AbstractGrammar)
     return rn
 end
 
+function expr2rulenode(expr::Symbol, grammar::AbstractGrammar, startSymbol::Symbol)
+    tags = get_tags(grammar)
+    (s, rn) = expr2rulenode(expr, grammar, tags)
+    while s != startSymbol
+            
+        updatedrule = findfirst(==(s), grammar.rules)     
+        
+        if isnothing(updatedrule)
+            error("INVALID STARTING SYMBOL")
+        end
+            
+        s = tags[s]
+        rn = RuleNode(updatedrule, [rn])
+    end
+    return rn
+end
+
+function expr2rulenode(expr::Symbol, grammar::AbstractGrammar)
+    tags = get_tags(grammar)
+    (s, rn) = expr2rulenode(expr, grammar, tags)
+    return rn
+end
+
 """
 Calculates the log probability associated with a rulenode in a probabilistic grammar.
 """
