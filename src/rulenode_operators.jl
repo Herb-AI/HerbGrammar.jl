@@ -1,3 +1,72 @@
+"""
+    holes_from_child_types(index::Integer, grammar::ContextSensitiveGrammar)
+
+Given the `index` of a rule in a `grammar`, create a vector of [`Hole`](@ref)s
+corresponding to the children of the rule at `index`.
+"""
+function holes_from_child_types(index::Integer, grammar::ContextSensitiveGrammar)
+    return [Hole(get_domain(grammar, type)) for type in grammar.childtypes[index]]
+end
+
+"""
+    RuleNode(ind::Int, grammar::ContextSensitiveGrammar)
+
+Create a [`RuleNode`](@ref) with [`Hole`](@ref)s as children. The holes
+are initialized with the types of the children of the rule at `ind`.
+
+# Examples
+```jldoctest
+julia> g = @csgrammar begin
+           A = 1 | 2 | 3
+           B = A + A
+       end
+1: A = 1
+2: A = 2
+3: A = 3
+4: B = A + A
+
+
+julia> rulenode_with_empty_children(4, g)
+4{hole[Bool[1, 1, 1, 0]],hole[Bool[1, 1, 1, 0]]}
+```
+"""
+function rulenode_with_empty_children(ind::Int, _val::Union{Any,Nothing}, grammar::ContextSensitiveGrammar)
+    child_holes = holes_from_child_types(ind, grammar)
+    return RuleNode(ind, _val, child_holes)
+end
+
+function rulenode_with_empty_children(ind::Int, grammar::ContextSensitiveGrammar)
+    return rulenode_with_empty_children(ind, nothing, grammar)
+end
+
+"""
+    uniform_hole_with_empty_children(domain::BitVector, grammar::AbstractGrammar)
+
+Create a [`UniformHole`](@ref) with [`Hole`](@ref)s as children. The holes
+are initialized with the types of the children of the rule at `ind`.
+
+# Examples
+```jldoctest
+julia> g = @csgrammar begin
+           A = 1 | 2 | 3
+           B = (A + A) | (A - A)
+       end
+1: A = 1
+2: A = 2
+3: A = 3
+4: B = A + A
+5: B = A - A
+
+
+julia> uniform_hole_with_empty_children(BitVector([0, 0, 0, 1, 1]), g)
+fshole[Bool[0, 0, 0, 1, 1]]{hole[Bool[1, 1, 1, 0, 0]],hole[Bool[1, 1, 1, 0, 0]]}
+```
+"""
+function uniform_hole_with_empty_children(domain::BitVector, grammar::AbstractGrammar)
+    child_holes = holes_from_child_types(findfirst(domain), grammar)
+    return UniformHole(domain, child_holes)
+end
+
 rulesoftype(::Hole, ::Set{Int}) = Set{Int}()
 
 """

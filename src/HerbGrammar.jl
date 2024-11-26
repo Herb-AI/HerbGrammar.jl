@@ -7,12 +7,13 @@ using Serialization # grammar_io
 using HerbCore
 
 include("grammar_base.jl")
-include("rulenode_operators.jl")
 include("utils.jl")
 include("nodelocation.jl")
 
 include("csg/csg.jl")
 include("csg/probabilistic_csg.jl")
+
+include("rulenode_operators.jl")
 
 include("grammar_io.jl")
 
@@ -68,6 +69,9 @@ export
     read_pcsg,
     add_rule!,
     remove_rule!,
-    cleanup_removed_rules!
+    cleanup_removed_rules!,
+    holes_from_child_types,
+    rulenode_with_empty_children,
+    uniform_hole_with_empty_children
 
 end # module HerbGrammar
