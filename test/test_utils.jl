@@ -1,10 +1,15 @@
-@testset "SymbolTable Tests" begin
+module DefiningAVariable
     x = 1
-    g₁ = @cfgrammar begin
+end
+@testset "SymbolTable Tests" begin
+    g = @cfgrammar begin
         Real = |(1:9)
         Real = x
     end
 
-    st = grammar2symboltable(g₁)
-    @test !isnothing(st[:x])
+    st = grammar2symboltable(g, DefiningAVariable)
+    @test st[:x] == 1
+
+    st = SymbolTable(g, DefiningAVariable)
+    @test st[:x] == 1
 end
