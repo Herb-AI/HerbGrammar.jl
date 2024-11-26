@@ -10,6 +10,6 @@ end
     st = grammar2symboltable(g, DefiningAVariable)
     @test st[:x] == 1
 
-    st = SymbolTable(g, DefiningAVariable)
+    @test_warn r"deprecated" st = SymbolTable(g, DefiningAVariable)
     @test st[:x] == 1
 end
