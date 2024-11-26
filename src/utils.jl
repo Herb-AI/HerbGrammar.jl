@@ -38,7 +38,8 @@ end
 """
     SymbolTable
 
-Data structure for mapping terminal symbols in the [`AbstractGrammar`](@ref) to their Julia interpretation.
+Type alias for a `Dict` that maps terminal symbols in the [`AbstractGrammar`](@ref)
+to their Julia interpretation.
 """
 const SymbolTable = Dict{Symbol,Any}
 
@@ -56,6 +57,9 @@ function grammar2symboltable(grammar::AbstractGrammar, mod::Module=Main)
     tab
 end
 
+# When we eventually remove this deprecation, also remove `SymbolTables` from
+# the `treat_as_own` option in `test/runtests.jl` 
+@deprecate SymbolTable(g::AbstractGrammar, m::Module) grammar2symboltable(g, m)
 
 _add_to_symboltable!(tab::SymbolTable, rule::Any, mod::Module) = true
 
