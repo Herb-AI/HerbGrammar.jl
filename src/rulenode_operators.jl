@@ -210,12 +210,9 @@ function _rulenode2expr(typ::Symbol, rulenode::AbstractRuleNode, grammar::Abstra
     retval, j
 end
 
-
-"""
-    expr2ulenode(expr::Expr, grammar::AbstractGrammar)
-
-Converts an expression into a [`AbstractRuleNode`](@ref) corresponding to the rule definitions in the grammar.
-"""
+# ---------------------------------------------
+# expr2rulenode and associated functions
+# ---------------------------------------------
 
 function grammar_map_right_to_left(grammar::AbstractGrammar)
     tags = Dict{Any,Any}()
@@ -318,6 +315,11 @@ function _expr2rulenode(expr::Any, grammar::AbstractGrammar, tags::Dict{Any,Any}
     return (tags[expr], RuleNode(rule, []))
 end
 
+"""
+    expr2rulenode(expr::Expr, grammar::AbstractGrammar, startSymbol::Symbol)
+
+Converts an expression into a [`AbstractRuleNode`](@ref) corresponding to the rule definitions in the grammar.
+"""
 function expr2rulenode(expr::Expr, grammar::AbstractGrammar, startSymbol::Symbol)
     tags = grammar_map_right_to_left(grammar)
     (s, rn) = _expr2rulenode(expr, grammar, tags)
@@ -335,12 +337,22 @@ function expr2rulenode(expr::Expr, grammar::AbstractGrammar, startSymbol::Symbol
     return rn
 end
 
+"""
+    expr2rulenode(expr::Expr, grammar::AbstractGrammar)
+
+Converts an expression into a [`AbstractRuleNode`](@ref) corresponding to the rule definitions in the grammar.
+"""
 function expr2rulenode(expr::Expr, grammar::AbstractGrammar)
     tags = grammar_map_right_to_left(grammar)
     (s, rn) = _expr2rulenode(expr, grammar, tags)
     return rn
 end
 
+"""
+    expr2rulenode(expr::Symbol, grammar::AbstractGrammar, startSymbol::Symbol)
+
+Converts an expression into a [`AbstractRuleNode`](@ref) corresponding to the rule definitions in the grammar.
+"""
 function expr2rulenode(expr::Symbol, grammar::AbstractGrammar, startSymbol::Symbol)
     tags = get_tags(grammar)
     (s, rn) = expr2rulenode(expr, grammar, tags)
@@ -358,6 +370,11 @@ function expr2rulenode(expr::Symbol, grammar::AbstractGrammar, startSymbol::Symb
     return rn
 end
 
+"""
+    expr2rulenode(expr::Symbol, grammar::AbstractGrammar)
+
+Converts an expression into a [`AbstractRuleNode`](@ref) corresponding to the rule definitions in the grammar.
+"""
 function expr2rulenode(expr::Symbol, grammar::AbstractGrammar)
     tags = get_tags(grammar)
     (s, rn) = expr2rulenode(expr, grammar, tags)
