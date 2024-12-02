@@ -1,10 +1,27 @@
 """
-    holes_from_child_types(index::Integer, grammar::ContextSensitiveGrammar)
+    empty_children(index::Integer, grammar::ContextSensitiveGrammar)
 
 Given the `index` of a rule in a `grammar`, create a vector of [`Hole`](@ref)s
 corresponding to the children of the rule at `index`.
+
+# Examples
+```jldoctest
+julia> g = @csgrammar begin
+           A = 1 | 2 | 3
+           B = A + A
+       end
+1: A = 1
+2: A = 2
+3: A = 3
+4: B = A + A
+
+
+julia> empty_children(4, g)
+2-element Vector{Hole}:
+ hole[Bool[1, 1, 1, 0]]
+ hole[Bool[1, 1, 1, 0]]```
 """
-function holes_from_child_types(index::Integer, grammar::ContextSensitiveGrammar)
+function empty_children(index::Integer, grammar::ContextSensitiveGrammar)
     return [Hole(get_domain(grammar, type)) for type in grammar.childtypes[index]]
 end
 
@@ -31,7 +48,7 @@ julia> rulenode_with_empty_children(4, g)
 ```
 """
 function rulenode_with_empty_children(ind::Int, _val::Union{Any,Nothing}, grammar::ContextSensitiveGrammar)
-    child_holes = holes_from_child_types(ind, grammar)
+    child_holes = empty_children(ind, grammar)
     return RuleNode(ind, _val, child_holes)
 end
 
@@ -63,7 +80,7 @@ fshole[Bool[0, 0, 0, 1, 1]]{hole[Bool[1, 1, 1, 0, 0]],hole[Bool[1, 1, 1, 0, 0]]}
 ```
 """
 function uniform_hole_with_empty_children(domain::BitVector, grammar::AbstractGrammar)
-    child_holes = holes_from_child_types(findfirst(domain), grammar)
+    child_holes = empty_children(findfirst(domain), grammar)
     return UniformHole(domain, child_holes)
 end
 
