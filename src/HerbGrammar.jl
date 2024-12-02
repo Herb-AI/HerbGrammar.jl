@@ -70,7 +70,7 @@ export
     add_rule!,
     remove_rule!,
     cleanup_removed_rules!,
-    holes_from_child_types,
+    empty_children,
     rulenode_with_empty_children,
     uniform_hole_with_empty_children
 
