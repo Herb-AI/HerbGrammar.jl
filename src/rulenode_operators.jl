@@ -1,7 +1,88 @@
-HerbCore.RuleNode(ind::Int, grammar::AbstractGrammar) = RuleNode(ind, nothing, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
-HerbCore.RuleNode(ind::Int, _val::Any, grammar::AbstractGrammar) = RuleNode(ind, _val, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[ind]])
+"""
+    empty_children(index::Integer, grammar::ContextSensitiveGrammar)
 
-HerbCore.UniformHole(domain::BitVector, grammar::AbstractGrammar) = UniformHole(domain, [Hole(get_domain(grammar, type)) for type ∈ grammar.childtypes[findfirst(domain)]])
+Given the `index` of a rule in a `grammar`, create a vector of [`Hole`](@ref)s
+corresponding to the children of the rule at `index`.
+
+# Examples
+```jldoctest
+julia> g = @csgrammar begin
+           A = 1 | 2 | 3
+           B = A + A
+       end
+1: A = 1
+2: A = 2
+3: A = 3
+4: B = A + A
+
+
+julia> empty_children(4, g)
+2-element Vector{Hole}:
+ hole[Bool[1, 1, 1, 0]]
+ hole[Bool[1, 1, 1, 0]]```
+"""
+function empty_children(index::Integer, grammar::ContextSensitiveGrammar)
+    return [Hole(get_domain(grammar, type)) for type in grammar.childtypes[index]]
+end
+
+"""
+    RuleNode(ind::Int, grammar::ContextSensitiveGrammar)
+
+Create a [`RuleNode`](@ref) with [`Hole`](@ref)s as children. The holes
+are initialized with the types of the children of the rule at `ind`.
+
+# Examples
+```jldoctest
+julia> g = @csgrammar begin
+           A = 1 | 2 | 3
+           B = A + A
+       end
+1: A = 1
+2: A = 2
+3: A = 3
+4: B = A + A
+
+
+julia> rulenode_with_empty_children(4, g)
+4{hole[Bool[1, 1, 1, 0]],hole[Bool[1, 1, 1, 0]]}
+```
+"""
+function rulenode_with_empty_children(ind::Int, _val::Union{Any,Nothing}, grammar::ContextSensitiveGrammar)
+    child_holes = empty_children(ind, grammar)
+    return RuleNode(ind, _val, child_holes)
+end
+
+function rulenode_with_empty_children(ind::Int, grammar::ContextSensitiveGrammar)
+    return rulenode_with_empty_children(ind, nothing, grammar)
+end
+
+"""
+    uniform_hole_with_empty_children(domain::BitVector, grammar::AbstractGrammar)
+
+Create a [`UniformHole`](@ref) with [`Hole`](@ref)s as children. The holes
+are initialized with the types of the children of the rule at `ind`.
+
+# Examples
+```jldoctest
+julia> g = @csgrammar begin
+           A = 1 | 2 | 3
+           B = (A + A) | (A - A)
+       end
+1: A = 1
+2: A = 2
+3: A = 3
+4: B = A + A
+5: B = A - A
+
+
+julia> uniform_hole_with_empty_children(BitVector([0, 0, 0, 1, 1]), g)
+fshole[Bool[0, 0, 0, 1, 1]]{hole[Bool[1, 1, 1, 0, 0]],hole[Bool[1, 1, 1, 0, 0]]}
+```
+"""
+function uniform_hole_with_empty_children(domain::BitVector, grammar::AbstractGrammar)
+    child_holes = empty_children(findfirst(domain), grammar)
+    return UniformHole(domain, child_holes)
+end
 
 rulesoftype(::Hole, ::Set{Int}) = Set{Int}()
 
@@ -79,7 +160,7 @@ end
 Replace child `i` of a node, a part of larger `expr`, with `new_expr`.
 """
 function swap_node(expr::RuleNode, node::RuleNode, child_index::Int, new_expr::RuleNode)
-    if expr == node 
+    if expr == node
         node.children[child_index] = new_expr
     else
         for child ∈ expr.children
@@ -130,14 +211,14 @@ function rulesonleft(node::RuleNode, path::Vector{Int})::Set{Int}
         for ch in node.children
             union!(ruleset, rulesonleft(ch, Vector{Int}()))
         end
-        return ruleset 
+        return ruleset
     elseif length(path) == 1
         # if there is only one element left in the path, collect all children except the one indicated in the path
         ruleset = Set{Int}(get_rule(node))
         for i in 1:path[begin]-1
             union!(ruleset, rulesonleft(node.children[i], Vector{Int}()))
         end
-        return ruleset 
+        return ruleset
     else
         # collect all subtrees up to the child indexed in the path
         ruleset = Set{Int}(get_rule(node))
@@ -145,7 +226,7 @@ function rulesonleft(node::RuleNode, path::Vector{Int})::Set{Int}
             union!(ruleset, rulesonleft(node.children[i], Vector{Int}()))
         end
         union!(ruleset, rulesonleft(node.children[path[begin]], path[2:end]))
-        return ruleset 
+        return ruleset
     end
 end
 
@@ -164,7 +245,7 @@ function rulenode2expr(rulenode::AbstractRuleNode, grammar::AbstractGrammar)
     end
     root = deepcopy(grammar.rules[get_rule(rulenode)])
     if !grammar.isterminal[get_rule(rulenode)] # not terminal
-        root,_ = _rulenode2expr(root, rulenode, grammar)
+        root, _ = _rulenode2expr(root, rulenode, grammar)
     end
     return root
 end
@@ -177,15 +258,15 @@ end
 
 function _rulenode2expr(expr::Expr, rulenode::AbstractRuleNode, grammar::AbstractGrammar, j=0)
     if isfilled(rulenode)
-        for (k,arg) in enumerate(expr.args)
+        for (k, arg) in enumerate(expr.args)
             if isa(arg, Expr)
-                expr.args[k],j = _rulenode2expr(arg, rulenode, grammar, j)
+                expr.args[k], j = _rulenode2expr(arg, rulenode, grammar, j)
             elseif haskey(grammar.bytype, arg)
                 child = rulenode.children[j+=1]
                 if isfilled(child)
                     expr.args[k] = deepcopy(grammar.rules[get_rule(child)])
                     if !isterminal(grammar, child)
-                        expr.args[k],_ = _rulenode2expr(expr.args[k], child, grammar, 0)
+                        expr.args[k], _ = _rulenode2expr(expr.args[k], child, grammar, 0)
                     end
                 else
                     expr.args[k] = _get_hole_type(child, grammar)
@@ -204,7 +285,7 @@ function _rulenode2expr(typ::Symbol, rulenode::AbstractRuleNode, grammar::Abstra
         child = rulenode.children[1]
         retval = deepcopy(grammar.rules[get_rule(child)])
         if !grammar.isterminal[get_rule(child)]
-            retval,_ = _rulenode2expr(retval, child, grammar, 0)
+            retval, _ = _rulenode2expr(retval, child, grammar, 0)
         end
     end
     retval, j
@@ -397,7 +478,7 @@ rulenode_log_probability(::Hole, ::AbstractGrammar) = 1
 Returns true if the expression represented by the [`RuleNode`](@ref) is a complete expression, 
 meaning that it is fully defined and doesn't have any [`Hole`](@ref)s.
 """
-function iscomplete(grammar::AbstractGrammar, node::RuleNode) 
+function iscomplete(grammar::AbstractGrammar, node::RuleNode)
     if isterminal(grammar, node)
         return true
     elseif isempty(node.children)
@@ -508,18 +589,9 @@ function contains_returntype(node::RuleNode, grammar::AbstractGrammar, sym::Symb
         return true
     end
     for c in node.children
-        if contains_returntype(c, grammar, sym, maxdepth-1)
+        if contains_returntype(c, grammar, sym, maxdepth - 1)
             return true
         end
     end
     return false
-end
-
-function Base.display(rulenode::RuleNode, grammar::AbstractGrammar)
-    root = rulenode2expr(rulenode, grammar)
-    if isa(root, Expr)
-        walk_tree(root)
-    else
-        root
-    end
 end
