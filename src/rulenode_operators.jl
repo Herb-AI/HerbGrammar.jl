@@ -354,7 +354,7 @@ end
 Converts an expression into a [`AbstractRuleNode`](@ref) corresponding to the rule definitions in the grammar.
 """
 function expr2rulenode(expr::Symbol, grammar::AbstractGrammar, startSymbol::Symbol)
-    tags = get_tags(grammar)
+    tags = grammar_map_right_to_left(grammar)
     (s, rn) = expr2rulenode(expr, grammar, tags)
     while s != startSymbol
             
@@ -375,9 +375,9 @@ end
 
 Converts an expression into a [`AbstractRuleNode`](@ref) corresponding to the rule definitions in the grammar.
 """
-function expr2rulenode(expr::Symbol, grammar::AbstractGrammar)
-    tags = get_tags(grammar)
-    (s, rn) = expr2rulenode(expr, grammar, tags)
+function expr2rulenode(expr::Union{Symbol,Number}, grammar::AbstractGrammar)
+    tags = grammar_map_right_to_left(grammar)
+    (s, rn) = _expr2rulenode(expr, grammar, tags)
     return rn
 end
 
