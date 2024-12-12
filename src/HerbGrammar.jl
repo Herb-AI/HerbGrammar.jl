@@ -67,9 +67,6 @@ export
     read_pcsg,
     add_rule!,
     remove_rule!,
-    cleanup_removed_rules!,
-    empty_children,
-    rulenode_with_empty_children,
-    uniform_hole_with_empty_children
+    cleanup_removed_rules!
 
 end # module HerbGrammar
