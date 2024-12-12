@@ -45,7 +45,6 @@ function get_childtypes(rule::Any, types::AbstractVector{Symbol})
     return retval
 end
 
-Base.getindex(grammar::AbstractGrammar, typ::Symbol) = grammar.bytype[typ]
 
 """
     nonterminals(grammar::AbstractGrammar)::Vector{Symbol}
@@ -181,13 +180,6 @@ nchildren(grammar::AbstractGrammar, rule_index::Int)::Int = length(grammar.child
 Returns the maximum arity (number of children) over all production rules in the [`AbstractGrammar`](@ref).
 """
 max_arity(grammar::AbstractGrammar)::Int = maximum(length(cs) for cs in grammar.childtypes)
-
-
-function Base.show(io::IO, grammar::AbstractGrammar)
-    for i in eachindex(grammar.rules)
-        println(io, i, ": ", grammar.types[i], " = ", grammar.rules[i])
-    end
-end
 
 
 """
