@@ -43,5 +43,27 @@
     @test expr2rulenode(expr5, g2) == RuleNode(12, [RuleNode(14, []), RuleNode(3, [RuleNode(4, [RuleNode(9, [])]) , RuleNode(2, [RuleNode(4, [RuleNode(6, [])])])]), RuleNode(2, [RuleNode(4, [RuleNode(6, [])])])])
     @test expr2rulenode(expr5, g2, :Start) == RuleNode(1, [RuleNode(2, [RuleNode(5, [RuleNode(12, [RuleNode(14, []), RuleNode(3, [RuleNode(4, [RuleNode(9, [])]) , RuleNode(2, [RuleNode(4, [RuleNode(6, [])])])]), RuleNode(2, [RuleNode(4, [RuleNode(6, [])])])])])])])
     
-end
+    int_grammar = @csgrammar begin
+        Val = 0 | 1 | 2
+    end
 
+    int_expr = :(2)
+    @test expr2rulenode(int_expr, int_grammar) == RuleNode(3)
+    @test rulenode2expr(expr2rulenode(int_expr, int_grammar), int_grammar) == int_expr
+
+    float_grammar = @csgrammar begin
+        Val = 0.0 | 1.0 | 2.0 | 3.14
+    end
+
+    float_expr = :(3.14)
+    @test expr2rulenode(float_expr, float_grammar) == RuleNode(4)
+    @test rulenode2expr(expr2rulenode(float_expr, float_grammar), float_grammar) == float_expr
+    
+    sym_grammar = @csgrammar begin
+        Val = x
+    end
+
+    sym = :(x)
+    @test expr2rulenode(sym, sym_grammar) == RuleNode(1)
+    @test rulenode2expr(expr2rulenode(sym, sym_grammar), sym_grammar) == sym
+end
