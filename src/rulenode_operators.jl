@@ -42,6 +42,8 @@ rulesoftype(node::RuleNode, ruleset::Set{Int}, ::Hole) = rulesoftype(node, rules
 rulesoftype(::Hole, ::Set{Int}, ::RuleNode) = Set()
 rulesoftype(::Hole, ::Set{Int}, ::Hole) = Set()
 
+rulesoftype(node::AbstractRuleNode, index::Int) = rulesoftype(node, Set{Int}(index))
+
 """
     rulesoftype(node::RuleNode, grammar::AbstractGrammar, ruletype::Symbol, ignoreNode::RuleNode)
 

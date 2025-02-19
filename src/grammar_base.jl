@@ -142,19 +142,6 @@ end
 
 
 """
-    make_probabilistic!(grammar::AbstractGrammar)
-
-If the grammar is not probabilistic yet, initializes the grammar with uniform probabilities per type. If the grammar is alread probabilistic, no changed are made.
-"""
-function make_probabilistic!(grammar::AbstractGrammar)
-    if isprobabilistic(grammar)
-        @warn "Grammar is already probabilistic. The grammar will not be changed."
-    else
-        grammar.log_probabilities = [log(1 / length(grammar.bytype[grammar.types[index]])) for index in 1:length(grammar.rules)]
-    end
-end
-
-"""
     probability(grammar::AbstractGrammar, index::Int)::Real
 
 Return the probability for a rule in the grammar.

@@ -51,6 +51,8 @@ export
 
     @pcsgrammar,
     expr2pcsgrammar,
+    normalize!,
+    init_probabilities!,
 
     SymbolTable,
     grammar2symboltable,

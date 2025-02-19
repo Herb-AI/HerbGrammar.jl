@@ -185,6 +185,45 @@
             end
         end
     end
+
+    @testset "make csg probabilistic" begin
+        grammar = @csgrammar begin
+            R = |(1:3)       
+            S = |(1:2)
+        end
+        # Test correct initialization
+        @test !isprobabilistic(grammar)
+        init_probabilities!(grammar)
+        @test isprobabilistic(grammar)
+
+        probs = grammar.log_probabilities
+        
+        # Test equivalence of probabilities
+        @test probs[1] == probs[2] == probs[3]
+        @test probs[end-1] == probs[end]
+
+        # Test values
+        @test all(x -> isapprox(x, 1/3), exp.(probs)[1:3])
+        @test all(x -> isapprox(x, 1/2), exp.(probs)[4:5])
+    end
+
+    @testset "normalize! csg" begin
+        grammar = @csgrammar begin
+            R = |(1:3)       
+            S = |(1:2)
+        end
+
+        grammar.log_probabilities = zeros(length(grammar.rules))
+        
+        normalize!(grammar)
+
+        probs = grammar.log_probabilities
+        
+        # Test values
+        @test all(x -> isapprox(x, 1/3), exp.(probs)[1:3])
+        @test all(x -> isapprox(x, 1/2), exp.(probs)[4:5])
+    end
+
     
     @testset "Test that strict equality is used during rule creation" begin
         g₁ = @csgrammar begin

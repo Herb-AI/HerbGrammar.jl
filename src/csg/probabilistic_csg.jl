@@ -1,5 +1,7 @@
 
 """
+	expr2pcsgrammar(ex::Expr)::ContextSensitiveGrammar
+
 Function for converting an `Expr` to a [`ContextSensitiveGrammar`](@ref) with probabilities.
 If the expression is hardcoded, you should use the `@pcsgrammar` macro.
 Only expressions in the correct format (see [`@pcsgrammar`](@ref)) can be converted.
@@ -47,6 +49,8 @@ function expr2pcsgrammar(ex::Expr)::ContextSensitiveGrammar
 end
 
 """
+	parse_probabilistic_rule(e::Expr)
+
 Parses a single (potentially shorthand) derivation rule of a probabilistic [`ContextSensitiveGrammar`](@ref).
 Returns `nothing` if the rule is not probabilistic, otherwise a `Tuple` of its type and a 
 `Vector` of probability-rule pairs it expands into.
@@ -78,25 +82,51 @@ end
 
 
 """
+	normalize!(grammar::ContextSensitiveGrammar, type::Union{Symbol, Nothing}=nothing)
+
 A function for normalizing the probabilities of a probabilistic [`ContextSensitiveGrammar`](@ref).
-If the optional `type` argument is provided, only the rules of that type are normalized.
+If the optional `type` argument is provided, only the rules of that type are normalized. 
+If the grammar is not probabilistic, i.e. `grammar.log_probabilities==nothing`, a uniform distribution is initialized.
 """
-function normalize!(g::ContextSensitiveGrammar, type::Union{Symbol, Nothing}=nothing)
-	probabilities = map(exp, g.log_probabilities)
-	types = isnothing(type) ? keys(g.bytype) : [type]
+function normalize!(grammar::ContextSensitiveGrammar, type::Union{Symbol, Nothing}=nothing)
+	if !isprobabilistic(grammar)
+		@warn "Requesting normalization in a non-probabilistic grammar. Uniform distribution is assumed."
+		init_probabilities!(grammar)
+		return grammar
+	end
+
+	probabilities = map(exp, grammar.log_probabilities)
+	types = isnothing(type) ? keys(grammar.bytype) : [type]
 
 	for t ∈ types
-		total_prob = sum(probabilities[i] for i ∈ g.bytype[t])
+		total_prob = sum(probabilities[i] for i ∈ grammar.bytype[t])
 		if !(total_prob ≈ 1)
-			for i ∈ g.bytype[t]
+			for i ∈ grammar.bytype[t]
 				probabilities[i] /= total_prob
 			end
 		end
 	end
 	
-	g.log_probabilities = map(log, probabilities)
-	return g
+	grammar.log_probabilities = map(log, probabilities)
+	return grammar
 end
+
+
+"""
+    init_probabilities!(grammar::AbstractGrammar)
+
+If the grammar is not probabilistic yet, initializes the grammar with uniform probabilities per type. If the grammar is already probabilistic, no changed are made.
+"""
+function init_probabilities!(grammar::AbstractGrammar) 
+	if isprobabilistic(grammar) 
+		@warn "Tried to init probabilities for grammar, but it is already probabilistic. No changes are made."
+	else
+		grammar.log_probabilities = zeros(length(grammar.rules))
+		normalize!(grammar)
+	end
+	return grammar
+end
+
 
 """
 	@pcsgrammar
