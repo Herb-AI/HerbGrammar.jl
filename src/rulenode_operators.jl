@@ -322,6 +322,8 @@ function expr2rulenode(expr::Union{Symbol,Number}, grammar::AbstractGrammar)
 end
 
 """
+    rulenode_log_probability(node::RuleNode, grammar::AbstractGrammar)
+
 Calculates the log probability associated with a rulenode in a probabilistic grammar.
 """
 function rulenode_log_probability(node::RuleNode, grammar::AbstractGrammar)
