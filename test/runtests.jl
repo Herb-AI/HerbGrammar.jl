@@ -10,4 +10,5 @@ using Test
     include("test_rulenode2expr.jl")
     include("test_expr2rulenode.jl")
     include("test_utils.jl")
+    include("test_pcsg.jl")
 end

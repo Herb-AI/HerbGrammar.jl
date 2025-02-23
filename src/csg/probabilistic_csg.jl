@@ -175,3 +175,46 @@ end
 macro pcfgrammar(ex)
 	return :(expr2pcsgrammar($(QuoteNode(ex))))
 end
+
+
+"""
+    log_probability(grammar::AbstractGrammar, index::Int)::Real
+
+Returns the log probability for the rule at `index` in the grammar.
+    
+!!! warning
+    If the grammar is not probabilistic, a warning is displayed, and a uniform probability is assumed.
+"""
+function log_probability(grammar::AbstractGrammar, index::Int)::Real
+    if !isprobabilistic(grammar)
+        @warn "Requesting probability in a non-probabilistic grammar.\nUniform distribution is assumed."
+        # Assume uniform probability
+        return log(1 / length(grammar.bytype[grammar.types[index]]))
+    end
+    return grammar.log_probabilities[index]
+end
+
+"""
+    probability(grammar::AbstractGrammar, index::Int)::Real
+
+Return the probability for a rule in the grammar.
+Use [`log_probability`](@ref) whenever possible.
+
+!!! warning
+    If the grammar is not probabilistic, a warning is displayed, and a uniform probability is assumed.
+"""
+function probability(grammar::AbstractGrammar, index::Int)::Real
+    if !isprobabilistic(grammar)
+        @warn "Requesting probability in a non-probabilistic grammar.Uniform distribution is assumed."
+        # Assume uniform probability
+        return 1 / length(grammar.bytype[grammar.types[index]])
+    end
+    return ℯ^grammar.log_probabilities[index]
+end
+
+"""
+    isprobabilistic(grammar::AbstractGrammar)::Bool
+
+Function returns whether a [`AbstractGrammar`](@ref) is probabilistic.
+"""
+isprobabilistic(grammar::AbstractGrammar)::Bool = !(grammar.log_probabilities ≡ nothing)

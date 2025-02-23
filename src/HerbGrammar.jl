@@ -39,6 +39,7 @@ export
     nonterminals,
     iscomplete,
     parse_rule!,
+    rulesoftype,
 
     @csgrammar,
     expr2csgrammar,
