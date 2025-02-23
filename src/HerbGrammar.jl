@@ -60,6 +60,7 @@ export
     
     rulenode2expr,
     rulenode_log_probability,
+    max_rulenode_log_probability,
 
     mindepth_map,
     mindepth,

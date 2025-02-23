@@ -117,4 +117,36 @@
         @test all(x -> isapprox(x, 1/3), exp.(probs)[1:3])
         @test all(x -> isapprox(x, 1/2), exp.(probs)[4:5])
     end
+
+    @testset "Test rulenode_log_probability" begin
+        grammar = @pcsgrammar begin
+            0.5 : R = |(1:7)
+            0.5 : R = x
+        end
+        rn = @rulenode 2{4,8}
+
+        @test isapprox(exp(rulenode_log_probability(rn, grammar)), 1/14 * 1/14 * 0.5)
+
+        hole1 = UniformHole(BitVector((0, 1, 0)), [RuleNode(3), RuleNode(4)])
+        hole2 = UniformHole(BitVector((1, 1, 1)), [RuleNode(3), RuleNode(4)])
+        generic_hole = Hole([1,1,1,1,0])
+        
+        @test rulenode_log_probability(hole1, grammar) == log_probability(grammar, 2)
+        @test_throws ArgumentError rulenode_log_probability(hole2, grammar)
+        @test rulenode_log_probability(generic_hole, grammar) == 0
+    end
+
+    @testset "Test max_rulenode_log_probability" begin
+        grammar = @pcsgrammar begin
+            0.5 : R = |(1:2)
+            0.5 : R = x
+        end
+
+        hole = UniformHole(BitVector((1, 1, 1)), [RuleNode(2), RuleNode(3)])
+        generic_hole = Hole([1,1,0])
+        
+        @test exp(max_rulenode_log_probability(hole, grammar)) == 1/2 * 1/2 * 1/4
+        @test exp(max_rulenode_log_probability(generic_hole, grammar)) == 0.25
+    end
+
 end

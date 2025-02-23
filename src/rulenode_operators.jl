@@ -325,7 +325,7 @@ end
 Calculates the log probability associated with a rulenode in a probabilistic grammar.
 """
 function rulenode_log_probability(node::RuleNode, grammar::AbstractGrammar)
-    return log_probability(grammar, get_rule(node)) + sum((rulenode_log_probability(c, grammar) for c ∈ node.children), init=1)
+    return log_probability(grammar, get_rule(node)) + sum((rulenode_log_probability(c, grammar) for c ∈ node.children), init=0)
 end
 
 function rulenode_log_probability(hole::UniformHole, grammar::AbstractGrammar)
@@ -335,7 +335,7 @@ function rulenode_log_probability(hole::UniformHole, grammar::AbstractGrammar)
         throw(ArgumentError("Log probability of a UniformHole requested, which has more than 1 element within its domain. This is ambiguous."))
     end
 end
-rulenode_log_probability(::Hole, ::AbstractGrammar) = 1
+rulenode_log_probability(::Hole, ::AbstractGrammar) = 0
 
 """
     max_rulenode_log_probability(rulenode::AbstractRuleNode, grammar::AbstractGrammar)
@@ -348,7 +348,7 @@ max_rulenode_log_probability(rulenode::AbstractRuleNode, grammar::AbstractGramma
 
 function max_rulenode_log_probability(hole::UniformHole, grammar::AbstractGrammar)
     max_index = argmax(i -> grammar.log_probabilities[i], findall(hole.domain))
-    return log_probability(grammar, max_index) + sum((max_rulenode_log_probability(c, grammar) for c ∈ node.children), init=1)
+    return log_probability(grammar, max_index) + sum((max_rulenode_log_probability(c, grammar) for c ∈ hole.children), init=0)
 end
 
 function max_rulenode_log_probability(hole::Hole, grammar::AbstractGrammar)
