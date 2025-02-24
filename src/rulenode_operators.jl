@@ -351,13 +351,11 @@ function max_rulenode_log_probability(rulenode::RuleNode, grammar::AbstractGramm
 end
 
 function max_rulenode_log_probability(hole::AbstractHole, grammar::AbstractGrammar)
-    max_index = argmax(i -> grammar.log_probabilities[i], findall(hole.domain))
-    return log_probability(grammar, max_index) + sum((max_rulenode_log_probability(c, grammar) for c ∈ hole.children), init=0)
+    return maximum(grammar.log_probabilities[findall(hole.domain)]) + sum((max_rulenode_log_probability(c, grammar) for c ∈ hole.children), init=0)
 end
 
 function max_rulenode_log_probability(hole::Hole, grammar::AbstractGrammar)
-    max_index = argmax(i -> grammar.log_probabilities[i], findall(hole.domain))
-    return log_probability(grammar, max_index)
+    return maximum(grammar.log_probabilities[findall(hole.domain)])
 end
 
 
