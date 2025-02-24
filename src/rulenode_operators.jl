@@ -330,7 +330,7 @@ function rulenode_log_probability(node::RuleNode, grammar::AbstractGrammar)
     return log_probability(grammar, get_rule(node)) + sum((rulenode_log_probability(c, grammar) for c ∈ node.children), init=0)
 end
 
-function rulenode_log_probability(hole::UniformHole, grammar::AbstractGrammar)
+function rulenode_log_probability(hole::AbstractHole, grammar::AbstractGrammar)
     if sum(hole.domain) == 1 # only one element 
         return log_probability(grammar, only(findall(hole.domain)))
     else
@@ -346,9 +346,11 @@ Calculates the highest possible probability within an `AbstractRuleNode`.
 That is, for each node and its domain, get the highest probability and multiply it with the probabilities of its children, if present. 
 As we operate with log probabilities, we sum the logarithms.
 """
-max_rulenode_log_probability(rulenode::AbstractRuleNode, grammar::AbstractGrammar) = rulenode_log_probability(rulenode, grammar)
+function max_rulenode_log_probability(rulenode::RuleNode, grammar::AbstractGrammar)
+    return log_probability(grammar, get_rule(rulenode)) + sum((max_rulenode_log_probability(c, grammar) for c ∈ rulenode.children), init=0)
+end
 
-function max_rulenode_log_probability(hole::UniformHole, grammar::AbstractGrammar)
+function max_rulenode_log_probability(hole::AbstractHole, grammar::AbstractGrammar)
     max_index = argmax(i -> grammar.log_probabilities[i], findall(hole.domain))
     return log_probability(grammar, max_index) + sum((max_rulenode_log_probability(c, grammar) for c ∈ hole.children), init=0)
 end
