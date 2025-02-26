@@ -1,58 +1,3 @@
-rulesoftype(::Hole, ::Set{Int}) = Set{Int}()
-
-"""
-	rulesoftype(node::RuleNode, grammar::AbstractGrammar, ruletype::Symbol)
-
-Returns every rule of nonterminal symbol `ruletype` that is also used in the [`AbstractRuleNode`](@ref) tree.
-"""
-rulesoftype(node::RuleNode, grammar::AbstractGrammar, ruletype::Symbol) = rulesoftype(node, Set{Int}(grammar[ruletype]))
-rulesoftype(::Hole, ::AbstractGrammar, ::Symbol) = Set{Int}()
-
-
-"""
-    rulesoftype(node::RuleNode, ruleset::Set{Int}, ignoreNode::RuleNode)
-
-Returns every rule in the ruleset that is also used in the [`AbstractRuleNode`](@ref) tree, but not in the `ignoreNode` subtree.
-
-!!! warning
-    The `ignoreNode` must be a subtree of `node` for it to have an effect.
-"""
-function rulesoftype(node::RuleNode, ruleset::Set{Int}, ignoreNode::RuleNode)
-    retval = Set()
-
-    if node == ignoreNode
-        return retval
-    end
-
-    if get_rule(node) ∈ ruleset
-        union!(retval, [get_rule(node)])
-    end
-
-    if isempty(node.children)
-        return retval
-    else
-        for child ∈ node.children
-            union!(retval, rulesoftype(child, ruleset))
-        end
-
-        return retval
-    end
-end
-rulesoftype(node::RuleNode, ruleset::Set{Int}, ::Hole) = rulesoftype(node, ruleset)
-rulesoftype(::Hole, ::Set{Int}, ::RuleNode) = Set()
-rulesoftype(::Hole, ::Set{Int}, ::Hole) = Set()
-
-"""
-    rulesoftype(node::RuleNode, grammar::AbstractGrammar, ruletype::Symbol, ignoreNode::RuleNode)
-
-Returns every rule of nonterminal symbol `ruletype` that is also used in the [`AbstractRuleNode`](@ref) tree, but not in the `ignoreNode` subtree.
-
-!!! warning
-    The `ignoreNode` must be a subtree of `node` for it to have an effect.
-"""
-rulesoftype(node::RuleNode, grammar::AbstractGrammar, ruletype::Symbol, ignoreNode::RuleNode) = rulesoftype(node, Set(grammar[ruletype]), ignoreNode)
-rulesoftype(::Hole, ::AbstractGrammar, ::Symbol, ::RuleNode) = Set()
-
 """
     swap_node(expr::AbstractRuleNode, new_expr::AbstractRuleNode, path::Vector{Int})
 
@@ -377,13 +322,41 @@ function expr2rulenode(expr::Union{Symbol,Number}, grammar::AbstractGrammar)
 end
 
 """
+    rulenode_log_probability(node::RuleNode, grammar::AbstractGrammar)
+
 Calculates the log probability associated with a rulenode in a probabilistic grammar.
 """
 function rulenode_log_probability(node::RuleNode, grammar::AbstractGrammar)
-    return log_probability(grammar, get_rule(node)) + sum((rulenode_log_probability(c, grammar) for c ∈ node.children), init=1)
+    return log_probability(grammar, get_rule(node)) + sum((rulenode_log_probability(c, grammar) for c ∈ node.children), init=0)
 end
 
-rulenode_log_probability(::Hole, ::AbstractGrammar) = 1
+function rulenode_log_probability(hole::AbstractHole, grammar::AbstractGrammar)
+    if sum(hole.domain) == 1 # only one element 
+        return log_probability(grammar, only(findall(hole.domain)))
+    else
+        throw(ArgumentError("Log probability of a UniformHole requested, which has more than 1 element within its domain. This is ambiguous."))
+    end
+end
+rulenode_log_probability(::Hole, ::AbstractGrammar) = 0
+
+"""
+    max_rulenode_log_probability(rulenode::AbstractRuleNode, grammar::AbstractGrammar)
+
+Calculates the highest possible probability within an `AbstractRuleNode`. 
+That is, for each node and its domain, get the highest probability and multiply it with the probabilities of its children, if present. 
+As we operate with log probabilities, we sum the logarithms.
+"""
+function max_rulenode_log_probability(rulenode::RuleNode, grammar::AbstractGrammar)
+    return log_probability(grammar, get_rule(rulenode)) + sum((max_rulenode_log_probability(c, grammar) for c ∈ rulenode.children), init=0)
+end
+
+function max_rulenode_log_probability(hole::AbstractHole, grammar::AbstractGrammar)
+    return maximum(grammar.log_probabilities[findall(hole.domain)]) + sum((max_rulenode_log_probability(c, grammar) for c ∈ hole.children), init=0)
+end
+
+function max_rulenode_log_probability(hole::Hole, grammar::AbstractGrammar)
+    return maximum(grammar.log_probabilities[findall(hole.domain)])
+end
 
 
 """

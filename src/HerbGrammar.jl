@@ -39,6 +39,7 @@ export
     nonterminals,
     iscomplete,
     parse_rule!,
+    rulesoftype,
 
     @csgrammar,
     expr2csgrammar,
@@ -51,12 +52,15 @@ export
 
     @pcsgrammar,
     expr2pcsgrammar,
+    normalize!,
+    init_probabilities!,
 
     SymbolTable,
     grammar2symboltable,
     
     rulenode2expr,
     rulenode_log_probability,
+    max_rulenode_log_probability,
 
     mindepth_map,
     mindepth,
