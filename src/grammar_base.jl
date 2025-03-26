@@ -165,6 +165,20 @@ function add_rule!(g::AbstractGrammar, e::Expr)
             # with strict equality so that true and 1 are not considered
             # equal. that means we can't use `in` or `∈` for equality checking.
             if !any(s == type && (r === rule || typeof(r)==Expr && r == rule) for (type, rule) ∈ zip(g.types, g.rules))
+                # Extract specification if defined.
+                if (isa(r, Expr) && r.head == :(:=))
+                    specification = r.args[2]
+                    if isa(specification, Expr) && specification.head == :tuple
+                        specification = specification.args
+                    else
+                        specification = [specification]
+                    end
+                    push!(g.specification, specification)
+                    r = r.args[1]
+                else
+                    push!(g.specification, [])
+                end
+                
                 push!(g.rules, r)
                 push!(g.iseval, iseval(rule))
                 push!(g.types, s)

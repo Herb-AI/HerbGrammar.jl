@@ -34,6 +34,7 @@ mutable struct ContextSensitiveGrammar <: AbstractGrammar
 	bychildtypes::Vector{BitVector}
 	log_probabilities::Union{Vector{Real}, Nothing}
 	constraints::Vector{AbstractConstraint}
+	specification::Vector{Vector{Expr}}
 end
 
 ContextSensitiveGrammar(
@@ -45,10 +46,11 @@ ContextSensitiveGrammar(
 	domains::Dict{Symbol, BitVector},
 	childtypes::Vector{Vector{Symbol}},
 	bychildtypes::Vector{BitVector},
-	log_probabilities::Union{Vector{<:Real}, Nothing}
-) = ContextSensitiveGrammar(rules, types, isterminal, iseval, bytype, domains, childtypes, bychildtypes, log_probabilities, AbstractConstraint[])
+	log_probabilities::Union{Vector{<:Real}, Nothing},
+	specification::Vector{Vector{Expr}}
+) = ContextSensitiveGrammar(rules, types, isterminal, iseval, bytype, domains, childtypes, bychildtypes, log_probabilities, AbstractConstraint[], specification)
 
-ContextSensitiveGrammar() = ContextSensitiveGrammar([], [], BitVector[], BitVector[], Dict{Symbol, Vector{Int}}(), Dict{Symbol, BitVector}(), Vector{Vector{Symbol}}(), Vector{BitVector}(), nothing, AbstractConstraint[])
+ContextSensitiveGrammar() = ContextSensitiveGrammar([], [], BitVector[], BitVector[], Dict{Symbol, Vector{Int}}(), Dict{Symbol, BitVector}(), Vector{Vector{Symbol}}(), Vector{BitVector}(), nothing, AbstractConstraint[], Vector{Vector{Expr}}())
 
 """
 	expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
