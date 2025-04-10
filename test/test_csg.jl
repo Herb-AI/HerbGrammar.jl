@@ -1,3 +1,5 @@
+using HerbConstraints: DomainRuleNode, VarNode, Ordered
+
 @testset verbose=true "CSGs" begin
     @testset "Create empty grammar" begin
         g = @csgrammar begin end
@@ -92,6 +94,72 @@
 
         @test length(g₁.rules) == 5
         @test :Real ∈ g₁.types
+    end
+
+    @testset "Merging two grammars with constraints" begin
+        g₁ = @csgrammar begin
+            Real = |(1:2)
+            Real = x
+        end
+
+        g₂ = @csgrammar begin
+            Real = Real + Real
+            Real = Real * Real
+        end
+
+        # make a constraint that orders grammars
+        ordered_operations_constraint = Ordered(DomainRuleNode([1, 1], [VarNode(:v), VarNode(:w)]), [:v, :w])
+
+        addconstraint!(g₂, ordered_operations_constraint)
+
+        merge_grammars!(g₁, g₂)
+
+        @test length(g₁.constraints) == 1
+        merged_constraint = only(g₁.constraints)
+
+        # get indices of + and * rules
+        add_idx = only(findall(==(g₂.rules[1]), g₁.rules))
+        mult_idx = only(findall(==(g₂.rules[2]), g₁.rules))
+
+        expected_new_domain = falses(length(g₁.rules))
+        expected_new_domain[add_idx] = true
+        expected_new_domain[mult_idx] = true
+
+        @test merged_constraint.tree.domain == expected_new_domain
+    end
+
+    @testset "Merging two grammars with constraints with duplicate rules" begin
+        g₁ = @csgrammar begin
+            Real = |(1:2)
+            Real = x
+            Real = Real + Real
+        end
+
+        g₂ = @csgrammar begin
+            Real = Real + Real
+            Real = Real * Real
+        end
+
+        # make a constraint that orders grammars
+        ordered_operations_constraint = Ordered(DomainRuleNode([1, 1], [VarNode(:v), VarNode(:w)]), [:v, :w])
+
+        addconstraint!(g₂, ordered_operations_constraint)
+
+        merge_grammars!(g₁, g₂)
+
+        @test length(g₁.rules) == 5  # + rule should only be in there once
+        @test length(g₁.constraints) == 1
+        merged_constraint = only(g₁.constraints)
+
+        # get indices of + and * rules
+        add_idx = only(findall(==(g₂.rules[1]), g₁.rules))
+        mult_idx = only(findall(==(g₂.rules[2]), g₁.rules))
+
+        expected_new_domain = falses(length(g₁.rules))
+        expected_new_domain[add_idx] = true
+        expected_new_domain[mult_idx] = true
+
+        @test merged_constraint.tree.domain == expected_new_domain
     end
 
     @testset "Writing and loading CSG to/from disk" begin
