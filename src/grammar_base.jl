@@ -156,15 +156,15 @@ The syntax is identical to the syntax of [`@csgrammar`](@ref) and [`@cfgrammar`]
 """
 function add_rule!(g::AbstractGrammar, e::Expr)
     if e.head == :(=) && typeof(e.args[1]) == Symbol
-        s = e.args[1]		# Name of return type
-        rule = e.args[2]	# expression?
+        s = e.args[1]# Name of return type
+        rule = e.args[2]# expression?
         rvec = Any[]
         parse_rule!(rvec, rule)
         for r ∈ rvec
             # Only add a rule if it does not exist yet. Check for existance
             # with strict equality so that true and 1 are not considered
             # equal. that means we can't use `in` or `∈` for equality checking.
-            if !any(s == type && (r === rule || typeof(r)==Expr && r == rule) for (type, rule) ∈ zip(g.types, g.rules))
+            if !any(s == type && (r === rule || typeof(r) == Expr && r == rule) for (type, rule) ∈ zip(g.types, g.rules))
                 push!(g.rules, r)
                 push!(g.iseval, iseval(rule))
                 push!(g.types, s)
@@ -182,6 +182,10 @@ function add_rule!(g::AbstractGrammar, e::Expr)
     g.childtypes = [get_childtypes(rule, alltypes) for rule ∈ g.rules]
     g.bychildtypes = [BitVector([g.childtypes[i1] == g.childtypes[i2] for i2 ∈ 1:length(g.rules)]) for i1 ∈ 1:length(g.rules)]
     g.domains = Dict(type => BitArray(r ∈ g.bytype[type] for r ∈ 1:length(g.rules)) for type ∈ keys(g.bytype))
+    # update grammar constraints
+    for c in g.constraints
+        HerbCore.update_rule_indices!(c, length(g.rules))
+    end
     return g
 end
 
