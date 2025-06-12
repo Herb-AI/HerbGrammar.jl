@@ -188,25 +188,34 @@ end
 """
 	merge_grammars!(merge_to::AbstractGrammar, merge_from::AbstractGrammar)
 
-Adds all rules and constraints from `merge_from` to `merge_to`.
+Adds all rules and constraints from `merge_from` to `merge_to`. Duplicate rules are ignored.
 """
 function merge_grammars!(merge_to::AbstractGrammar, merge_from::AbstractGrammar)
     mapping = Dict{Integer,Integer}() # keep track of new rule indices for merge_from grammar
+    # Dict for easy lookup of duplicate rules 
+    rule_to_index = Dict{Tuple,Int}()
+    for (idx, (type, rule)) in enumerate(zip(merge_to.types, merge_to.rules))
+        rule_to_index[(type, rule)] = idx
+    end
+
     # add rules
     for i in eachindex(merge_from.rules)
         n_rules_before = length(merge_to.rules)
         expression = :($(merge_from.types[i]) = $(merge_from.rules[i]))
         add_rule!(merge_to, expression)
-        # if rule was added, update mapping
         n_rules_after = length(merge_to.rules)
         if n_rules_before < n_rules_after
             mapping[i] = n_rules_after
+        else
+            # If rule already exists, rule index from merge_to grammar is used for mapping.  
+            idx = rule_to_index[(merge_from.types[i], merge_from.rules[i])]
+            mapping[i] = idx
         end
     end
     # update constraints
     for c in merge_from.constraints
         addconstraint!(merge_to, c)
         HerbCore.update_rule_indices!(c, length(merge_to.rules), mapping, merge_to.constraints)
-
     end
+    # Note: Tests for merging two grammars with constraints can be found in HerbConstraints.
 end

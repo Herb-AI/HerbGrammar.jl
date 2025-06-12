@@ -143,7 +143,7 @@ max_arity(grammar::AbstractGrammar)::Int = maximum(length(cs) for cs in grammar.
 """
     add_rule!(g::AbstractGrammar, e::Expr)
 
-Adds a rule to the grammar. 
+Adds a rule to the grammar and updates grammar constraints as required. 
 
 ### Usage: 
 ```

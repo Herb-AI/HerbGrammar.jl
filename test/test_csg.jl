@@ -1,4 +1,4 @@
-@testset verbose=true "CSGs" begin
+@testset verbose = true "CSGs" begin
     @testset "Create empty grammar" begin
         g = @csgrammar begin end
         @test isempty(g.rules)
@@ -19,14 +19,14 @@
         @test :Real ∈ g₁.types
 
         g₂ = @cfgrammar begin
-            Real = |([1,2,3])
+            Real = |([1, 2, 3])
         end
-        @test g₂.rules == [1,2,3]
+        @test g₂.rules == [1, 2, 3]
 
         g₃ = @cfgrammar begin
             Real = 1 | 2 | 3
         end
-        @test g₃.rules == [1,2,3]
+        @test g₃.rules == [1, 2, 3]
 
         g₄ = @cfgrammar begin
             Real = 1 | 1
@@ -99,7 +99,7 @@
             Real = |(1:5)
             Real = 6 | 7 | 8
         end
-        
+
         store_csg(g₁, "toy_cfg.grammar")
         g₂ = read_csg("toy_cfg.grammar")
         @test :Real ∈ g₂.types
@@ -108,7 +108,7 @@
         # delete file afterwards
         rm("toy_cfg.grammar")
     end
-    
+
     @testset "Test that strict equality is used during rule creation" begin
         g₁ = @csgrammar begin
             R = x
@@ -117,7 +117,7 @@
 
         add_rule!(g₁, :(R = 1 | 2))
 
-        add_rule!(g₁,:(Bool = true))
+        add_rule!(g₁, :(Bool = true))
 
         @test all(g₁.rules .== [:x, :(R + R), 1, 2, true])
 
@@ -126,7 +126,7 @@
             R = R + R
         end
 
-        add_rule!(g₁,:(Bool = true))
+        add_rule!(g₁, :(Bool = true))
 
         add_rule!(g₁, :(R = 1 | 2))
 
@@ -144,7 +144,7 @@
             S = 7 + S
             A = 8 + S
         end
-        
+
         @test g.childtypes[1] == []
         @test g.childtypes[2] == [:S, :A]
         @test g.childtypes[3] == [:A, :S]
@@ -153,7 +153,7 @@
         @test g.childtypes[6] == [:S, :S]
         @test g.childtypes[7] == [:S]
         @test g.childtypes[8] == [:S]
-        
+
         @test g.bychildtypes[1] == [1, 0, 0, 1, 0, 0, 0, 0] # 1, 4
         @test g.bychildtypes[2] == [0, 1, 0, 0, 0, 0, 0, 0] # 2
         @test g.bychildtypes[3] == [0, 0, 1, 0, 0, 0, 0, 0] # 3
@@ -165,17 +165,17 @@
     end
 
     @testset "Check that macros return an expr, not an object" begin
-        @test typeof(@macroexpand @csgrammar begin 
+        @test typeof(@macroexpand @csgrammar begin
             A = 1
         end) == Expr
-        @test typeof(@macroexpand @cfgrammar begin 
+        @test typeof(@macroexpand @cfgrammar begin
             A = 1
         end) == Expr
-        @test typeof(@macroexpand @pcsgrammar begin 
-            1.0 : A = 1
+        @test typeof(@macroexpand @pcsgrammar begin
+            1.0:A = 1
         end) == Expr
-        @test typeof(@macroexpand @pcfgrammar begin 
-            1.0 : A = 1
+        @test typeof(@macroexpand @pcfgrammar begin
+            1.0:A = 1
         end) == Expr
     end
 
@@ -193,22 +193,22 @@
         # Adding duplicated rule
         add_rule!(g, :(A = 1))
         @test g.rules == [:(1 + A), :(2 * B), 1, 1, 2]
- 
+
         # Adding new rule with already existing rhs
         add_rule!(g, :(A = 2))
         @test g.rules == [:(1 + A), :(2 * B), 1, 1, 2, 2]
-    end 
+    end
 
-    @testset "Add tree to grammar" begin 
+    @testset "Add tree to grammar" begin
         g = @cfgrammar begin
             Number = |(1:2)
             Number = x
-            Number = Number + Number 
+            Number = Number + Number
             Number = Number * Number
         end
         hole = Hole(get_domain(g, g.bytype[:Number]))
         test_ast = RuleNode(4, [RuleNode(1), hole])
-        
+
         add_rule!(g, test_ast)
         @test g.rules[6] == :(1 + Number)
     end
