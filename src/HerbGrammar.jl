@@ -3,7 +3,10 @@ module HerbGrammar
 using Serialization # grammar_io
 
 using HerbCore
+using Interfaces
 
+include("interfaces.jl")
+include("csg/cost_csg.jl")
 include("grammar_base.jl")
 include("utils.jl")
 include("nodelocation.jl")
@@ -15,8 +18,12 @@ include("rulenode_operators.jl")
 
 include("grammar_io.jl")
 
-export 
+export
+    CostBasedInterface,
+
     ContextSensitiveGrammar,
+    CostBasedContextSensitiveGrammar,
+    CBCSG,
     AbstractRuleNode,
     RuleNode,
     Hole,
