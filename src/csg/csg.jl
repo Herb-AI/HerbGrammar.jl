@@ -24,31 +24,31 @@ Use the [`@csgrammar`](@ref) macro to create a [`ContextSensitiveGrammar`](@ref)
 Use the [`@pcsgrammar`](@ref) macro to create a [`ContextSensitiveGrammar`](@ref) object with probabilities.
 """
 mutable struct ContextSensitiveGrammar <: AbstractGrammar
-	rules::Vector{Any}
-	types::Vector{Union{Symbol, Nothing}}
-	isterminal::BitVector
-	iseval::BitVector
-	bytype::Dict{Symbol, Vector{Int}}
-	domains::Dict{Symbol,BitVector}    				
-	childtypes::Vector{Vector{Symbol}}
-	bychildtypes::Vector{BitVector}
-	log_probabilities::Union{Vector{Real}, Nothing}
-	constraints::Vector{AbstractConstraint}
+    rules::Vector{Any}
+    types::Vector{Union{Symbol,Nothing}}
+    isterminal::BitVector
+    iseval::BitVector
+    bytype::Dict{Symbol,Vector{Int}}
+    domains::Dict{Symbol,BitVector}
+    childtypes::Vector{Vector{Symbol}}
+    bychildtypes::Vector{BitVector}
+    log_probabilities::Union{Vector{Real},Nothing}
+    constraints::Vector{AbstractConstraint}
 end
 
 ContextSensitiveGrammar(
-	rules::Vector{<:Any},
-	types::Vector{<:Union{Symbol, Nothing}},
-	isterminal::Union{BitVector, Vector{Bool}},
-	iseval::Union{BitVector, Vector{Bool}},
-	bytype::Dict{Symbol, Vector{Int}},
-	domains::Dict{Symbol, BitVector},
-	childtypes::Vector{Vector{Symbol}},
-	bychildtypes::Vector{BitVector},
-	log_probabilities::Union{Vector{<:Real}, Nothing}
+    rules::Vector{<:Any},
+    types::Vector{<:Union{Symbol,Nothing}},
+    isterminal::Union{BitVector,Vector{Bool}},
+    iseval::Union{BitVector,Vector{Bool}},
+    bytype::Dict{Symbol,Vector{Int}},
+    domains::Dict{Symbol,BitVector},
+    childtypes::Vector{Vector{Symbol}},
+    bychildtypes::Vector{BitVector},
+    log_probabilities::Union{Vector{<:Real},Nothing}
 ) = ContextSensitiveGrammar(rules, types, isterminal, iseval, bytype, domains, childtypes, bychildtypes, log_probabilities, AbstractConstraint[])
 
-ContextSensitiveGrammar() = ContextSensitiveGrammar([], [], BitVector[], BitVector[], Dict{Symbol, Vector{Int}}(), Dict{Symbol, BitVector}(), Vector{Vector{Symbol}}(), Vector{BitVector}(), nothing, AbstractConstraint[])
+ContextSensitiveGrammar() = ContextSensitiveGrammar([], [], BitVector[], BitVector[], Dict{Symbol,Vector{Int}}(), Dict{Symbol,BitVector}(), Vector{Vector{Symbol}}(), Vector{BitVector}(), nothing, AbstractConstraint[])
 
 """
 	expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
@@ -70,15 +70,15 @@ grammar = expr2csgrammar(
 ```
 """
 function expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
-	grammar = ContextSensitiveGrammar()
-	
-	for e ∈ ex.args
-		if isa(e, Expr)
-			add_rule!(grammar, e)
-		end
-	end
+    grammar = ContextSensitiveGrammar()
 
-	return grammar
+    for e ∈ ex.args
+        if isa(e, Expr)
+            add_rule!(grammar, e)
+        end
+    end
+
+    return grammar
 end
 
 
@@ -116,7 +116,7 @@ end
 - [`@pcsgrammar`](@ref) uses a similar syntax to create probabilistic [`ContextSensitiveGrammar`](@ref)s.
 """
 macro csgrammar(ex)
-	return :(expr2csgrammar($(QuoteNode(ex))))
+    return :(expr2csgrammar($(QuoteNode(ex))))
 end
 
 
@@ -126,7 +126,7 @@ end
 This macro is deprecated and will be removed in future versions. Use [`@csgrammar`](@ref) instead.
 """
 macro cfgrammar(ex)
-	return :(expr2csgrammar($(QuoteNode(ex))))
+    return :(expr2csgrammar($(QuoteNode(ex))))
 end
 
 parse_rule!(v::Vector{Any}, r) = push!(v, r)
@@ -135,7 +135,7 @@ function parse_rule!(v::Vector{Any}, ex::Expr)
     # Strips `LineNumberNode`s from the expression
     Base.remove_linenums!(ex)
 
-    if ex.head == :call && ex.args[1] == :|	
+    if ex.head == :call && ex.args[1] == :|
         terms = _expand_shorthand(ex.args)
 
         for t in terms
@@ -147,26 +147,26 @@ function parse_rule!(v::Vector{Any}, ex::Expr)
 end
 
 function _expand_shorthand(args::Vector{Any})
-	# expand a rule using the `|` symbol:
-	# `X = |(1:3)`, `X = 1|2|3`, `X = |([1,2,3])`
-	# these should all be equivalent and should expand to
-	# the following 3 rules: `X = 1`, `X = 2`, and `X = 3`
-	if args[1] != :|
-		throw(ArgumentError("Tried to parse: $ex as a shorthand rule, but it is not a shorthand rule."))
-	end
+    # expand a rule using the `|` symbol:
+    # `X = |(1:3)`, `X = 1|2|3`, `X = |([1,2,3])`
+    # these should all be equivalent and should expand to
+    # the following 3 rules: `X = 1`, `X = 2`, and `X = 3`
+    if args[1] != :|
+        throw(ArgumentError("Tried to parse: $ex as a shorthand rule, but it is not a shorthand rule."))
+    end
 
-	if length(args) == 2
-		to_expand = args[2]
-		if to_expand.args[1] == :(:)
-			expanded = collect(to_expand.args[2]:to_expand.args[3])	# (1:3) case
-		else
-			expanded = to_expand.args								# ([1,2,3]) case
-		end
-	elseif length(args) == 3
-		expanded = args[2:end]										# 1|2|3 case
-	else
-		throw(ArgumentError("Failed to parse shorthand for rule: $ex"))
-	end
+    if length(args) == 2
+        to_expand = args[2]
+        if to_expand.args[1] == :(:)
+            expanded = collect(to_expand.args[2]:to_expand.args[3])# (1:3) case
+        else
+            expanded = to_expand.args# ([1,2,3]) case
+        end
+    elseif length(args) == 3
+        expanded = args[2:end]# 1|2|3 case
+    else
+        throw(ArgumentError("Failed to parse shorthand for rule: $ex"))
+    end
 end
 
 """
@@ -182,20 +182,40 @@ Clear all constraints from the grammar
 clearconstraints!(grammar::ContextSensitiveGrammar) = empty!(grammar.constraints)
 
 function Base.display(rulenode::RuleNode, grammar::ContextSensitiveGrammar)
-	return rulenode2expr(rulenode, grammar)
+    return rulenode2expr(rulenode, grammar)
 end
 
 """
 	merge_grammars!(merge_to::AbstractGrammar, merge_from::AbstractGrammar)
 
-Adds all rules and constraints from `merge_from` to `merge_to`.
+Adds all rules and constraints from `merge_from` to `merge_to`. Duplicate rules are ignored.
 """
 function merge_grammars!(merge_to::AbstractGrammar, merge_from::AbstractGrammar)
-	for i in eachindex(merge_from.rules)
-		expression = :($(merge_from.types[i]) = $(merge_from.rules[i]))
-		add_rule!(merge_to, expression)
-	end
-	for i in eachindex(merge_from.constraints)
-		addconstraint!(merge_to, merge_from.constraints[i])
-	end
+    mapping = Dict{Integer,Integer}() # keep track of new rule indices for merge_from grammar
+    # Dict for easy lookup of duplicate rules 
+    rule_to_index = Dict{Tuple,Int}()
+    for (idx, (type, rule)) in enumerate(zip(merge_to.types, merge_to.rules))
+        rule_to_index[(type, rule)] = idx
+    end
+
+    # add rules
+    for i in eachindex(merge_from.rules)
+        n_rules_before = length(merge_to.rules)
+        expression = :($(merge_from.types[i]) = $(merge_from.rules[i]))
+        add_rule!(merge_to, expression)
+        n_rules_after = length(merge_to.rules)
+        if n_rules_before < n_rules_after
+            mapping[i] = n_rules_after
+        else
+            # If rule already exists, rule index from merge_to grammar is used for mapping.  
+            idx = rule_to_index[(merge_from.types[i], merge_from.rules[i])]
+            mapping[i] = idx
+        end
+    end
+    # update constraints
+    for c in merge_from.constraints
+        addconstraint!(merge_to, c)
+        HerbCore.update_rule_indices!(c, length(merge_to.rules), mapping, merge_to.constraints)
+    end
+    # Note: Tests for merging two grammars with constraints can be found in HerbConstraints.
 end
