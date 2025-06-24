@@ -169,12 +169,18 @@ function _expand_shorthand(args::Vector{Any})
     end
 end
 
+# TODO: check if domain is valid
 """
 	addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint)
 
-Adds a [`AbstractConstraint`](@ref) to a [`ContextSensitiveGrammar`](@ref).
+Adds a [`AbstractConstraint`](@ref) to a [`ContextSensitiveGrammar`](@ref). Errors if constraint's domain is not valid.
 """
-addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint) = push!(grammar.constraints, c)
+function addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint)
+    if !HerbCore.is_domain_valid(c, grammar)
+        error("The domain of $(typeof(c)) is not valid for the provided grammar.")
+    end
+    push!(grammar.constraints, c)
+end
 
 """
 Clear all constraints from the grammar
@@ -215,7 +221,7 @@ function merge_grammars!(merge_to::AbstractGrammar, merge_from::AbstractGrammar)
     # update constraints
     for c in merge_from.constraints
         addconstraint!(merge_to, c)
-        HerbCore.update_rule_indices!(c, length(merge_to.rules), mapping, merge_to.constraints)
+        HerbCore.update_rule_indices!(c, length(merge_to.rules), mapping, merge_from.constraints)
     end
     # Note: Tests for merging two grammars with constraints can be found in HerbConstraints.
 end
