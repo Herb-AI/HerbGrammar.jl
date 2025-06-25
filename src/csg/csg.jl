@@ -179,6 +179,7 @@ function addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint)
         error("The domain of $(typeof(c)) is not valid for the provided grammar.")
     end
     push!(grammar.constraints, c)
+    # Note: Tests for adding constraints to a grammar can be found in HerbConstraints.
 end
 
 """
