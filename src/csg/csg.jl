@@ -176,7 +176,8 @@ Adds a [`AbstractConstraint`](@ref) to a [`ContextSensitiveGrammar`](@ref). Erro
 """
 function addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint)
     if !HerbCore.is_domain_valid(c, grammar)
-        error("The domain of $(typeof(c)) is not valid for the provided grammar.")
+        error("The domain of $(typeof(c)) is not valid for the provided grammar. Rule index or domain size does not match the number of grammar rule: $(length(grammar.rules))")
+
     end
     push!(grammar.constraints, c)
     # Note: Tests for adding constraints to a grammar can be found in HerbConstraints.
