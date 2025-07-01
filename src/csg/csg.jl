@@ -172,9 +172,16 @@ end
 """
 	addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint)
 
-Adds a [`AbstractConstraint`](@ref) to a [`ContextSensitiveGrammar`](@ref).
+Adds a [`AbstractConstraint`](@ref) to a [`ContextSensitiveGrammar`](@ref). Errors if constraint's domain is not valid.
 """
-addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint) = push!(grammar.constraints, c)
+function addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint)
+    if !HerbCore.is_domain_valid(c, grammar)
+        error("The domain of $(typeof(c)) is not valid for the provided grammar. Rule index or domain size does not match the number of grammar rule: $(length(grammar.rules))")
+
+    end
+    push!(grammar.constraints, c)
+    # Note: Tests for adding constraints to a grammar can be found in HerbConstraints.
+end
 
 """
 Clear all constraints from the grammar
@@ -212,10 +219,17 @@ function merge_grammars!(merge_to::AbstractGrammar, merge_from::AbstractGrammar)
             mapping[i] = idx
         end
     end
-    # update constraints
-    for c in merge_from.constraints
-        addconstraint!(merge_to, c)
-        HerbCore.update_rule_indices!(c, length(merge_to.rules), mapping, merge_to.constraints)
+    # update constraints of ...
+    # ... `merge_to` grammar
+    for i in eachindex(merge_to.constraints)
+        HerbCore.update_rule_indices!(merge_to.constraints[i], length(merge_to.rules))
+    end
+
+    # ... `merge_from` grammar (mapping required)
+    from_constraints = deepcopy(merge_from.constraints) # we don't want to modify `merge_from` 
+    for i in eachindex(from_constraints)
+        HerbCore.update_rule_indices!(from_constraints[i], length(merge_to.rules), mapping, from_constraints)
+        addconstraint!(merge_to, from_constraints[i])
     end
     # Note: Tests for merging two grammars with constraints can be found in HerbConstraints.
 end
