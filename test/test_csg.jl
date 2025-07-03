@@ -212,4 +212,16 @@
         add_rule!(g, test_ast)
         @test g.rules[6] == :(1 + Number)
     end
+
+    @testset "Get return type of a node/rule" begin
+        g = @csgrammar begin
+            Int = 1
+            String = "A"
+        end
+
+        @test return_type(g, 1) == :Int
+        @test return_type(g, @rulenode 1) == :Int
+        @test return_type(g, @rulenode 2) == :String
+        @test return_type(g, @rulenode UniformHole[0, 1]) == :String
+    end
 end
