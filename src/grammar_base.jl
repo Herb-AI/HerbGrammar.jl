@@ -61,6 +61,20 @@ Returns the type of the production rule at `rule_index`.
 """
 return_type(grammar::AbstractGrammar, rule_index::Int) = grammar.types[rule_index]
 
+"""
+    return_type(grammar::AbstractGrammar, rulenode::RuleNode)
+
+Get the type of the `rulenode` with respect to the `grammar`.
+"""
+return_type(grammar::AbstractGrammar, rulenode::RuleNode) = return_type(grammar, get_rule(rulenode))
+
+"""
+    return_type(grammar::AbstractGrammar, uniform_hole::UniformHole)
+
+Get the type of the `uniform_hole` with respect to the `grammar`.
+"""
+return_type(grammar::AbstractGrammar, uniform_hole::UniformHole) = return_type(grammar, findfirst(uniform_hole.domain))
+
 
 """
     child_types(grammar::AbstractGrammar, rule_index::Int)
