@@ -172,14 +172,20 @@ end
 """
 	addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint)
 
-Adds a [`AbstractConstraint`](@ref) to a [`ContextSensitiveGrammar`](@ref). Errors if constraint's domain is not valid.
+Adds a [`AbstractConstraint`](@ref) to a [`ContextSensitiveGrammar`](@ref). 
+
+!!! warning
+    - Errors if the constraint's domain is invalid.
+    - Calls to this function are ignored if the constraint already exists in the grammar.
 """
 function addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint)
     if !HerbCore.is_domain_valid(c, grammar)
         error("The domain of $(typeof(c)) is not valid for the provided grammar. Rule index or domain size does not match the number of grammar rule: $(length(grammar.rules))")
 
     end
-    push!(grammar.constraints, c)
+    if isempty(grammar.constraints) || !any(x -> HerbCore.issame(x, c), grammar.constraints) # only add constraint if it doesn't exist yet
+        push!(grammar.constraints, c)
+    end
     # Note: Tests for adding constraints to a grammar can be found in HerbConstraints.
 end
 
