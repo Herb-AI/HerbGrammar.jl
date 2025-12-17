@@ -109,6 +109,10 @@ function rulenode2expr(rulenode::AbstractRuleNode, grammar::AbstractGrammar)
     return root
 end
 
+function rulenode2expr(rulenode::AbstractHole, grammar::AbstractGrammar)
+    return rulenode
+end
+
 function _get_hole_type(hole::AbstractHole, grammar::AbstractGrammar)
     @assert !isfilled(hole) "Hole $(hole) is convertable to an expression. There is no need to represent it using a symbol."
     index = findfirst(hole.domain)
@@ -181,7 +185,6 @@ function _expr2rulenode(expr::Expr, grammar::AbstractGrammar, tags::Dict{Any,Any
             pnr = length(pl)
 
             while isnothing(rule)
-                
                 updatedrule = findfirst(==(pl[pnr]), grammar.rules)     
                 
                 if isnothing(updatedrule)
@@ -193,7 +196,6 @@ function _expr2rulenode(expr::Expr, grammar::AbstractGrammar, tags::Dict{Any,Any
 
                 pl[pnr] = tags[pl[pnr]]
                 pr[pnr] = RuleNode(updatedrule, [pr[pnr]])
-  
                 temp = [expr.args[1] ;pl]
                 newexpr = Expr(:call, temp...)
                 rule = findfirst(==(newexpr), grammar.rules)
@@ -250,6 +252,10 @@ function _expr2rulenode(expr::Expr, grammar::AbstractGrammar, tags::Dict{Any,Any
     end
 end
 
+function _expr2rulenode(expr::Hole, grammar::AbstractGrammar, tags::Dict{Any,Any})
+    return (_get_hole_type(expr, grammar), expr)
+end
+
 function _expr2rulenode(expr::Any, grammar::AbstractGrammar, tags::Dict{Any,Any})
     rule = findfirst(==(expr), grammar.rules)
     return (tags[expr], RuleNode(rule, []))
@@ -275,6 +281,10 @@ function expr2rulenode(expr::Expr, grammar::AbstractGrammar, startSymbol::Symbol
         rn = RuleNode(updatedrule, [rn])
     end
     return rn
+end
+
+function expr2rulenode(expr::AbstractHole, grammar::AbstractGrammar)
+    return expr
 end
 
 """
