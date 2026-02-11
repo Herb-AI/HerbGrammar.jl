@@ -183,6 +183,9 @@ function addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint)
         error("The domain of $(typeof(c)) is not valid for the provided grammar. Rule index or domain size does not match the number of grammar rule: $(length(grammar.rules))")
 
     end
+    if !is_constraint_valid(c, grammar)
+        error("The constraint $(typeof(c)) contains a tree that is not possible with the grammar.")
+    end
     if isempty(grammar.constraints) || !any(x -> HerbCore.issame(x, c), grammar.constraints) # only add constraint if it doesn't exist yet
         push!(grammar.constraints, c)
     end
@@ -238,4 +241,16 @@ function merge_grammars!(merge_to::AbstractGrammar, merge_from::AbstractGrammar)
         addconstraint!(merge_to, from_constraints[i])
     end
     # Note: Tests for merging two grammars with constraints can be found in HerbConstraints.
+end
+
+function is_constraint_valid(c::AbstractConstraint, grammar::AbstractGrammar)
+    return _is_tree_valid(c, grammar)        
+end
+
+function _is_tree_valid(rn::RuleNode, grammar::AbstractGrammar)
+    return true
+end
+
+function _is_tree_valid(hole::UniformHole, grammar::AbstractGrammar)
+    return true
 end

@@ -2,6 +2,7 @@ using Aqua
 using HerbCore
 using HerbGrammar
 using Test
+using HerbConstraints
 
 @testset "HerbGrammar.jl" verbose = true begin
     @testset "Aqua.jl Checks" Aqua.test_all(HerbGrammar; piracies=(treat_as_own=[SymbolTable],))
@@ -11,4 +12,5 @@ using Test
     include("test_expr2rulenode.jl")
     include("test_utils.jl")
     include("test_pcsg.jl")
+    include("test_adding_constraints.jl")
 end
