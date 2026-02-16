@@ -261,6 +261,7 @@ function _is_tree_valid(rn::RuleNode, grammar::AbstractGrammar, expected_type::S
     return_type(grammar, rn) == expected_type || return false
     rule_children = get_children(rn)
     expected_child_types = child_types(grammar, rn)
+    isempty(rule_children) && return true
     length(rule_children) == length(expected_child_types) || return false
     # not valid if any of the children is not valid
     for (i, child) in enumerate(rule_children)
@@ -276,6 +277,7 @@ function _is_tree_valid(hole::UniformHole, grammar::AbstractGrammar, expected_ty
     length(grammar.rules) == length(hole.domain) || return false
     child_types = grammar.childtypes[hole.domain]
     hole_children = get_children(hole)
+    isempty(hole_children) && return true
     for expected_child_types in child_types
         # not valid if the hole does not have the expected amount of children
         length(hole_children) == length(expected_child_types) || return false
