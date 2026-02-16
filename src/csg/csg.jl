@@ -183,9 +183,8 @@ function addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint)
     if !HerbCore.is_domain_valid(c, grammar)
         error("The domain of $(typeof(c)) is not valid for the provided grammar. Rule index or domain size does not match the number of grammar rule: $(length(grammar.rules))")
     end
-    error("REMOVE THIS ERROR")
     if !is_constraint_valid(c, grammar)
-        error("The constraint $(typeof(c)) contains a tree that is not possible with the grammar.")
+        error("The constraint $(typeof(c)) \n$c\n contains a tree that is not possible with the grammar.")
     end
     if isempty(grammar.constraints) || !any(x -> HerbCore.issame(x, c), grammar.constraints) # only add constraint if it doesn't exist yet
         push!(grammar.constraints, c)
@@ -244,42 +243,46 @@ function merge_grammars!(merge_to::AbstractGrammar, merge_from::AbstractGrammar)
     # Note: Tests for merging two grammars with constraints can be found in HerbConstraints.
 end
 
-function is_constraint_valid(c::AbstractConstraint, grammar::AbstractGrammar)
+"""
+    is_constraint_valid(c::AbstractConstraint, grammar::AbstractGrammar)::Bool
+
+Checks if constraint `c` contains a tree that is possible to construct with the given grammar.
+"""
+function is_constraint_valid(c::AbstractConstraint, grammar::AbstractGrammar)::Bool
     return _is_tree_valid(c.tree, grammar)        
 end
 
-function _is_tree_valid(rn::AbstractRuleNode, grammar::AbstractGrammar)
+function _is_tree_valid(rn::AbstractRuleNode, grammar::AbstractGrammar)::Bool
     return _is_tree_valid(rn, grammar, return_type(grammar, rn))
 end
 
-function _is_tree_valid(rn::RuleNode, grammar::AbstractGrammar, expected_type::Symbol)
+function _is_tree_valid(rn::RuleNode, grammar::AbstractGrammar, expected_type::Symbol)::Bool
     # not valid if the rule node type does not match the expected type
     return_type(grammar, rn) == expected_type || return false
     rule_children = get_children(rn)
     expected_child_types = child_types(grammar, rn)
     length(rule_children) == length(expected_child_types) || return false
     # not valid if any of the children is not valid
-    all(i -> _is_tree_valid(
-        child, grammar, expected_child_types[i]
-        ) for (i, child) in enumerate(rule_children)) || return false
+    for (i, child) in enumerate(rule_children)
+        _is_tree_valid(child, grammar, expected_child_types[i]) || return false
+    end
     return true
 end
 
-function _is_tree_valid(hole::UniformHole, grammar::AbstractGrammar, expected_type::Symbol)
+function _is_tree_valid(hole::UniformHole, grammar::AbstractGrammar, expected_type::Symbol)::Bool
     # not valid if the hole type does not match the expected type
     # return_type(grammar, hole) == expected_type || return false
     # not valid if domains have different lengths
     length(grammar.rules) == length(hole.domain) || return false
     child_types = grammar.childtypes[hole.domain]
     hole_children = get_children(hole)
-    # not valid if grammar rules possible for the hole have different types
-    allequal(child_types) || return false
-    expected_child_types = first(child_types)
-    # not valid if the hole does not have the expected amount of children
-    length(hole_children) == length(expected_child_types) || return false
-    # not valid if any of the children is not valid
-    all(i -> _is_tree_valid(
-        child, grammar, expected_child_types[i]
-        ) for (i, child) in enumerate(hole_children)) || return false
+    for expected_child_types in child_types
+        # not valid if the hole does not have the expected amount of children
+        length(hole_children) == length(expected_child_types) || return false
+        # not valid if any of the children is not valid
+        for (i, child) in enumerate(hole_children)
+            HerbGrammar._is_tree_valid(child, grammar, expected_child_types[i]) || return false
+        end
+    end
     return true
 end
