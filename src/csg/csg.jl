@@ -50,7 +50,7 @@ ContextSensitiveGrammar(
     specification::Vector{Vector{Expr}}
 ) = ContextSensitiveGrammar(rules, types, isterminal, iseval, bytype, domains, childtypes, bychildtypes, log_probabilities, AbstractConstraint[], specification)
 
-ContextSensitiveGrammar() = ContextSensitiveGrammar([], [], BitVector[], BitVector[], Dict{Symbol,Vector{Int}}(), Dict{Symbol,BitVector}(), Vector{Vector{Symbol}}(), Vector{BitVector}(), nothing, Vector{Vector{Expr}}())
+ContextSensitiveGrammar() = ContextSensitiveGrammar(Any[], Union{Symbol,Nothing}[], BitVector(), BitVector(), Dict{Symbol,Vector{Int}}(), Dict{Symbol,BitVector}(), Vector{Vector{Symbol}}(), Vector{BitVector}(), nothing, Vector{Vector{Expr}}())
 
 """
 	expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
