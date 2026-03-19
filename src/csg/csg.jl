@@ -183,7 +183,7 @@ function addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint)
         error("The domain of $(typeof(c)) is not valid for the provided grammar. Rule index or domain size does not match the number of grammar rule: $(length(grammar.rules))")
 
     end
-    if isempty(grammar.constraints) || !any(x -> HerbCore.issame(x, c), grammar.constraints) # only add constraint if it doesn't exist yet
+    if isempty(grammar.constraints) || !any(x -> (x == c), grammar.constraints) # only add constraint if it doesn't exist yet
         push!(grammar.constraints, c)
     end
     # Note: Tests for adding constraints to a grammar can be found in HerbConstraints.
