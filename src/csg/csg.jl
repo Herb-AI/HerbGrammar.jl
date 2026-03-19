@@ -184,7 +184,7 @@ function addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint;
         error("The domain of $(typeof(c)) is not valid for the provided grammar. Rule index or domain size does not match the number of grammar rule: $(length(grammar.rules))")
     end
     if !is_constraint_valid(c, grammar; allow_empty_children=allow_empty_children)
-        error("The constraint $(typeof(c)) \n$c\n contains a tree that is not possible with the grammar.")
+        error("The constraint $(typeof(c)) \n$c\n contains a tree that is not possible with the grammar\n$grammar")
     end
     if isempty(grammar.constraints) || !any(x -> HerbCore.issame(x, c), grammar.constraints) # only add constraint if it doesn't exist yet
         push!(grammar.constraints, c)
@@ -238,7 +238,7 @@ function merge_grammars!(merge_to::AbstractGrammar, merge_from::AbstractGrammar)
     from_constraints = deepcopy(merge_from.constraints) # we don't want to modify `merge_from` 
     for i in eachindex(from_constraints)
         HerbCore.update_rule_indices!(from_constraints[i], length(merge_to.rules), mapping, from_constraints)
-        addconstraint!(merge_to, from_constraints[i])
+        addconstraint!(merge_to, from_constraints[i]; allow_empty_children=true)
     end
     # Note: Tests for merging two grammars with constraints can be found in HerbConstraints.
 end
@@ -258,14 +258,15 @@ end
 
 function _is_tree_valid(rn::RuleNode, grammar::AbstractGrammar, expected_type::Symbol; allow_empty_children)::Bool
     # not valid if the rule node type does not match the expected type
-    return_type(grammar, rn) == expected_type || return false
+    (return_type(grammar, rn) == expected_type) || return false
     expected_child_types = child_types(grammar, rn)
     return _are_children_valid(rn, grammar, [expected_child_types]; allow_empty_children=allow_empty_children)
 end
 
 function _is_tree_valid(hole::UniformHole, grammar::AbstractGrammar, _expected_type::Symbol; allow_empty_children)::Bool
+    # ignoring "expected_type" here because a hole can have multiple types.
     # not valid if domain of the hole is not the same length as the grammar
-    length(grammar.rules) == length(hole.domain) || return false
+    (length(grammar.rules) == length(hole.domain)) || return false
     child_types = grammar.childtypes[hole.domain]
     return _are_children_valid(hole, grammar, child_types; allow_empty_children=allow_empty_children)
 end
@@ -275,7 +276,7 @@ function _are_children_valid(rn::AbstractRuleNode, grammar::AbstractGrammar, exp
     # in some cases we can allow not including children as a way of saying "any children are allowed"
     (isempty(children) && allow_empty_children) && return true
     for expected_child_types in expected_types
-        length(children) == length(expected_child_types) || return false
+        (length(children) == length(expected_child_types)) || return false
         for (i, child) in enumerate(children)
             _is_tree_valid(child, grammar, expected_child_types[i]; allow_empty_children=allow_empty_children) || return false
         end
