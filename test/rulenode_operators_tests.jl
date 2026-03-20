@@ -1,8 +1,7 @@
-module SomeDefinitions
+@testitem "RuleNode Operators" begin
+    module SomeDefinitions
     a_variable_that_is_defined = 7
-end
-
-@testset verbose = true "RuleNode Operators" begin
+    end
     @testset "Check if a symbol is a variable" begin
         g₁ = @cfgrammar begin
             Real = |(1:5)

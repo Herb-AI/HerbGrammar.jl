@@ -19,7 +19,7 @@ end
 Replace child `i` of a node, a part of larger `expr`, with `new_expr`.
 """
 function swap_node(expr::RuleNode, node::RuleNode, child_index::Int, new_expr::RuleNode)
-    if expr == node 
+    if expr == node
         node.children[child_index] = new_expr
     else
         for child ∈ expr.children
@@ -70,14 +70,14 @@ function rulesonleft(node::RuleNode, path::Vector{Int})::Set{Int}
         for ch in node.children
             union!(ruleset, rulesonleft(ch, Vector{Int}()))
         end
-        return ruleset 
+        return ruleset
     elseif length(path) == 1
         # if there is only one element left in the path, collect all children except the one indicated in the path
         ruleset = Set{Int}(get_rule(node))
         for i in 1:path[begin]-1
             union!(ruleset, rulesonleft(node.children[i], Vector{Int}()))
         end
-        return ruleset 
+        return ruleset
     else
         # collect all subtrees up to the child indexed in the path
         ruleset = Set{Int}(get_rule(node))
@@ -85,7 +85,7 @@ function rulesonleft(node::RuleNode, path::Vector{Int})::Set{Int}
             union!(ruleset, rulesonleft(node.children[i], Vector{Int}()))
         end
         union!(ruleset, rulesonleft(node.children[path[begin]], path[2:end]))
-        return ruleset 
+        return ruleset
     end
 end
 
@@ -104,7 +104,7 @@ function rulenode2expr(rulenode::AbstractRuleNode, grammar::AbstractGrammar)
     end
     root = deepcopy(grammar.rules[get_rule(rulenode)])
     if !grammar.isterminal[get_rule(rulenode)] # not terminal
-        root,_ = _rulenode2expr(root, rulenode, grammar)
+        root, _ = _rulenode2expr(root, rulenode, grammar)
     end
     return root
 end
@@ -117,15 +117,15 @@ end
 
 function _rulenode2expr(expr::Expr, rulenode::AbstractRuleNode, grammar::AbstractGrammar, j=0)
     if isfilled(rulenode)
-        for (k,arg) in enumerate(expr.args)
+        for (k, arg) in enumerate(expr.args)
             if isa(arg, Expr)
-                expr.args[k],j = _rulenode2expr(arg, rulenode, grammar, j)
+                expr.args[k], j = _rulenode2expr(arg, rulenode, grammar, j)
             elseif haskey(grammar.bytype, arg)
                 child = rulenode.children[j+=1]
                 if isfilled(child)
                     expr.args[k] = deepcopy(grammar.rules[get_rule(child)])
                     if !isterminal(grammar, child)
-                        expr.args[k],_ = _rulenode2expr(expr.args[k], child, grammar, 0)
+                        expr.args[k], _ = _rulenode2expr(expr.args[k], child, grammar, 0)
                     end
                 else
                     expr.args[k] = _get_hole_type(child, grammar)
@@ -144,7 +144,7 @@ function _rulenode2expr(typ::Symbol, rulenode::AbstractRuleNode, grammar::Abstra
         child = rulenode.children[1]
         retval = deepcopy(grammar.rules[get_rule(child)])
         if !grammar.isterminal[get_rule(child)]
-            retval,_ = _rulenode2expr(retval, child, grammar, 0)
+            retval, _ = _rulenode2expr(retval, child, grammar, 0)
         end
     end
     retval, j
@@ -157,21 +157,25 @@ end
 function grammar_map_right_to_left(grammar::AbstractGrammar)
     tags = Dict{Any,Any}()
     for (l, r) in zip(grammar.types, grammar.rules)
-        tags[r] = l
+        if typeof(r) <: Number
+            tags[repr(r)] = l
+        else
+            tags[r] = l
+        end
     end
     return tags
 end
 
-function _expr2rulenode(expr::Expr, grammar::AbstractGrammar, tags::Dict{Any,Any})
-    if expr.head == :call 
-
+function _expr2rulenode(expr::Expr, grammar::AbstractGrammar, tags::AbstractDict)
+    if expr.head == :call
         if !haskey(tags, expr)
-       
+            @info expr.args
             parameters = [_expr2rulenode(expr.args[i], grammar, tags) for i in (2:length(expr.args))]
-            pl = map( x -> x[1], parameters)
-            pr = map( x -> x[2], parameters)
-            
-            temp = [expr.args[1] ;pl]
+            @info parameters
+            pl = map(x -> x[1], parameters)
+            pr = map(x -> x[2], parameters)
+
+            temp = [expr.args[1]; pl]
             newexpr = Expr(:call, temp...)
             rule = findfirst(==(newexpr), grammar.rules)
 
@@ -181,9 +185,9 @@ function _expr2rulenode(expr::Expr, grammar::AbstractGrammar, tags::Dict{Any,Any
             pnr = length(pl)
 
             while isnothing(rule)
-                
-                updatedrule = findfirst(==(pl[pnr]), grammar.rules)     
-                
+
+                updatedrule = findfirst(==(pl[pnr]), grammar.rules)
+
                 if isnothing(updatedrule)
                     pl[pnr] = oldpl[pnr]
                     pr[pnr] = oldpr[pnr]
@@ -193,22 +197,22 @@ function _expr2rulenode(expr::Expr, grammar::AbstractGrammar, tags::Dict{Any,Any
 
                 pl[pnr] = tags[pl[pnr]]
                 pr[pnr] = RuleNode(updatedrule, [pr[pnr]])
-  
-                temp = [expr.args[1] ;pl]
+
+                temp = [expr.args[1]; pl]
                 newexpr = Expr(:call, temp...)
                 rule = findfirst(==(newexpr), grammar.rules)
-                
+
                 pnr = length(pl)
             end
             return (tags[newexpr], RuleNode(rule, pr))
-        else 
+        else
             rule = findfirst(==(expr), grammar.rules)
             return (tags[expr], RuleNode(rule, []))
         end
     elseif expr.head == :block
-        (l1, r1) = _expr2rulenode( expr.args[1], grammar, tags)
-        (l2, r2) = _expr2rulenode( expr.args[3], grammar, tags)
-        
+        (l1, r1) = _expr2rulenode(expr.args[1], grammar, tags)
+        (l2, r2) = _expr2rulenode(expr.args[3], grammar, tags)
+
         temp = (l1, l2)
 
         newexpr = Expr(:block, temp...)
@@ -222,27 +226,27 @@ function _expr2rulenode(expr::Expr, grammar::AbstractGrammar, tags::Dict{Any,Any
         pnr = length(pl)
 
         while isnothing(rule)
-            
-            updatedrule = findfirst(==(pl[pnr]), grammar.rules)     
-            
+
+            updatedrule = findfirst(==(pl[pnr]), grammar.rules)
+
             if isnothing(updatedrule)
                 pl[pnr] = oldpl[pnr]
                 pr[pnr] = oldpr[pnr]
                 pnr = pnr - 1
                 continue
             end
-            
+
             pl[pnr] = tags[pl[pnr]]
             pr[pnr] = RuleNode(updatedrule, [pr[pnr]])
-            
+
             temp = (pl[1], pl[2])
             newexpr = Expr(:block, temp...)
             rule = findfirst(==(newexpr), grammar.rules)
-            
+
             pnr = length(pl)
         end
         return (tags[newexpr], RuleNode(rule, pr))
-        
+
     elseif expr.head == :quote
         return _expr2rulenode(expr.args[1], grammar, tags)
     else
@@ -250,9 +254,15 @@ function _expr2rulenode(expr::Expr, grammar::AbstractGrammar, tags::Dict{Any,Any
     end
 end
 
-function _expr2rulenode(expr::Any, grammar::AbstractGrammar, tags::Dict{Any,Any})
+function _expr2rulenode(expr, grammar::AbstractGrammar, tags::AbstractDict)
     rule = findfirst(==(expr), grammar.rules)
     return (tags[expr], RuleNode(rule, []))
+end
+
+function _expr2rulenode(expr::Number, grammar::AbstractGrammar, tags::AbstractDict)
+    r = repr(expr)
+    rule = findfirst(==(r), repr.(grammar.rules))
+    return (tags[r], RuleNode(rule, []))
 end
 
 """
@@ -264,13 +274,13 @@ function expr2rulenode(expr::Expr, grammar::AbstractGrammar, startSymbol::Symbol
     tags = grammar_map_right_to_left(grammar)
     (s, rn) = _expr2rulenode(expr, grammar, tags)
     while s != startSymbol
-            
-        updatedrule = findfirst(==(s), grammar.rules)     
-        
+
+        updatedrule = findfirst(==(s), grammar.rules)
+
         if isnothing(updatedrule)
             error("INVALID STARTING SYMBOL")
         end
-            
+
         s = tags[s]
         rn = RuleNode(updatedrule, [rn])
     end
@@ -284,7 +294,7 @@ Converts an expression into a [`AbstractRuleNode`](@ref) corresponding to the ru
 """
 function expr2rulenode(expr::Expr, grammar::AbstractGrammar)
     tags = grammar_map_right_to_left(grammar)
-    (s, rn) = _expr2rulenode(expr, grammar, tags)
+    (_, rn) = _expr2rulenode(expr, grammar, tags)
     return rn
 end
 
@@ -297,13 +307,13 @@ function expr2rulenode(expr::Symbol, grammar::AbstractGrammar, startSymbol::Symb
     tags = grammar_map_right_to_left(grammar)
     (s, rn) = expr2rulenode(expr, grammar, tags)
     while s != startSymbol
-            
-        updatedrule = findfirst(==(s), grammar.rules)     
-        
+
+        updatedrule = findfirst(==(s), grammar.rules)
+
         if isnothing(updatedrule)
             error("INVALID STARTING SYMBOL")
         end
-            
+
         s = tags[s]
         rn = RuleNode(updatedrule, [rn])
     end
@@ -365,7 +375,7 @@ end
 Returns true if the expression represented by the [`RuleNode`](@ref) is a complete expression, 
 meaning that it is fully defined and doesn't have any [`Hole`](@ref)s.
 """
-function iscomplete(grammar::AbstractGrammar, node::RuleNode) 
+function iscomplete(grammar::AbstractGrammar, node::RuleNode)
     if isterminal(grammar, node)
         return true
     elseif isempty(node.children)
@@ -476,7 +486,7 @@ function contains_returntype(node::RuleNode, grammar::AbstractGrammar, sym::Symb
         return true
     end
     for c in node.children
-        if contains_returntype(c, grammar, sym, maxdepth-1)
+        if contains_returntype(c, grammar, sym, maxdepth - 1)
             return true
         end
     end

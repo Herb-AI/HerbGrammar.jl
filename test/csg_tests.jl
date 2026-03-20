@@ -1,4 +1,4 @@
-@testset verbose = true "CSGs" begin
+@testitem "CSGs" begin
     @testset "Create empty grammar" begin
         g = @csgrammar begin end
         @test isempty(g.rules)
