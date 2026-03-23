@@ -179,7 +179,7 @@ Adds a [`AbstractConstraint`](@ref) to a [`ContextSensitiveGrammar`](@ref).
     - Errors if the constraint's tree is impossible to construct with the given grammar.
     - Calls to this function are ignored if the constraint already exists in the grammar.
 """
-function addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint; allow_empty_children=false)
+function addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint; allow_empty_children::Bool=false)
     if !HerbCore.is_domain_valid(c, grammar)
         error("The domain of $(typeof(c)) is not valid for the provided grammar. Rule index or domain size does not match the number of grammar rule: $(length(grammar.rules))")
     end
@@ -244,26 +244,48 @@ function merge_grammars!(merge_to::AbstractGrammar, merge_from::AbstractGrammar)
 end
 
 """
-    is_constraint_valid(c::AbstractConstraint, grammar::AbstractGrammar; allow_empty_children)::Bool
+    is_constraint_valid(c::AbstractConstraint, grammar::AbstractGrammar; allow_empty_children)
 
-Checks if constraint `c` contains a tree that is possible to construct with the given grammar.
+Checks if the structure of constraint `c` is sound with the given grammar.
+E.g. if `c` is `Forbidden(tree)`, this funciton will check if `tree` is possible to construct with the given grammar.
 """
-function is_constraint_valid(c::AbstractConstraint, grammar::AbstractGrammar; allow_empty_children)::Bool
-    return _is_tree_valid(c.tree, grammar; allow_empty_children=allow_empty_children)        
+function is_constraint_valid(c::AbstractConstraint, grammar::AbstractGrammar; allow_empty_children::Bool)
+    @warn "Constraint $c was not checked for soundness, the check is not implemented."
+    return true
 end
 
-function _is_tree_valid(rn::AbstractRuleNode, grammar::AbstractGrammar; allow_empty_children)::Bool
-    return _is_tree_valid(rn, grammar, return_type(grammar, rn); allow_empty_children=allow_empty_children)
+"""
+    is_tree_valid(rn::AbstractRuleNode, grammar::AbstractGrammar; allow_empty_children)
+
+Checks if the tree `rn` is possible to construct with the given grammar.
+
+If `allow_empty_children` is set to true, the check will not error when no children are given for a rule that has children in the grammar.
+"""
+function is_tree_valid(rn::AbstractRuleNode, grammar::AbstractGrammar; allow_empty_children=false)
+    return is_tree_valid(rn, grammar, return_type(grammar, rn); allow_empty_children=allow_empty_children)
 end
 
-function _is_tree_valid(rn::RuleNode, grammar::AbstractGrammar, expected_type::Symbol; allow_empty_children)::Bool
+"""
+    is_tree_valid(rn::AbstractRuleNode, grammar::AbstractGrammar; allow_empty_children)
+
+Checks if the tree `rn` is possible to construct with the given grammar. The root of the tree should be `expected_type`.
+If `allow_empty_children` is set to true, the check will not error when no children are given for a rule that has children in the grammar.
+"""
+function is_tree_valid(rn::RuleNode, grammar::AbstractGrammar, expected_type::Symbol; allow_empty_children)
     # not valid if the rule node type does not match the expected type
     (return_type(grammar, rn) == expected_type) || return false
     expected_child_types = child_types(grammar, rn)
     return _are_children_valid(rn, grammar, [expected_child_types]; allow_empty_children=allow_empty_children)
 end
 
-function _is_tree_valid(hole::UniformHole, grammar::AbstractGrammar, _expected_type::Symbol; allow_empty_children)::Bool
+"""
+    is_tree_valid(rn::AbstractRuleNode, grammar::AbstractGrammar; allow_empty_children)
+
+Checks if the tree `hole` is possible to construct with the given grammar.
+
+If `allow_empty_children` is set to true, the check will not error when no children are given for a rule that has children in the grammar.
+"""
+function is_tree_valid(hole::UniformHole, grammar::AbstractGrammar, _expected_type::Symbol; allow_empty_children)
     # ignoring "expected_type" here because a hole can have multiple types.
     # not valid if domain of the hole is not the same length as the grammar
     (length(grammar.rules) == length(hole.domain)) || return false
@@ -271,14 +293,14 @@ function _is_tree_valid(hole::UniformHole, grammar::AbstractGrammar, _expected_t
     return _are_children_valid(hole, grammar, child_types; allow_empty_children=allow_empty_children)
 end
 
-function _are_children_valid(rn::AbstractRuleNode, grammar::AbstractGrammar, expected_types::Vector{Vector{Symbol}}; allow_empty_children)::Bool
+function _are_children_valid(rn::AbstractRuleNode, grammar::AbstractGrammar, expected_types::Vector{Vector{Symbol}}; allow_empty_children)
     children = get_children(rn)
     # in some cases we can allow not including children as a way of saying "any children are allowed"
     (isempty(children) && allow_empty_children) && return true
     for expected_child_types in expected_types
         (length(children) == length(expected_child_types)) || return false
         for (i, child) in enumerate(children)
-            _is_tree_valid(child, grammar, expected_child_types[i]; allow_empty_children=allow_empty_children) || return false
+            is_tree_valid(child, grammar, expected_child_types[i]; allow_empty_children=allow_empty_children) || return false
         end
     end
     return true
