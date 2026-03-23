@@ -249,10 +249,7 @@ end
 Checks if the structure of constraint `c` is sound with the given grammar.
 E.g. if `c` is `Forbidden(tree)`, this funciton will check if `tree` is possible to construct with the given grammar.
 """
-function is_constraint_valid(c::AbstractConstraint, grammar::AbstractGrammar; allow_empty_children::Bool)
-    @warn "Constraint $c was not checked for soundness, the check is not implemented."
-    return true
-end
+function is_constraint_valid end
 
 """
     is_tree_valid(rn::AbstractRuleNode, grammar::AbstractGrammar; allow_empty_children)
