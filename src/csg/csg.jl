@@ -186,7 +186,7 @@ function addconstraint!(grammar::ContextSensitiveGrammar, c::AbstractConstraint;
     if !is_constraint_valid(c, grammar; allow_empty_children=allow_empty_children)
         error("The constraint $(typeof(c)) \n$c\n contains a tree that is not possible with the grammar\n$grammar")
     end
-    if isempty(grammar.constraints) || !any(x -> HerbCore.issame(x, c), grammar.constraints) # only add constraint if it doesn't exist yet
+    if isempty(grammar.constraints) || !any(x -> (x == c), grammar.constraints) # only add constraint if it doesn't exist yet
         push!(grammar.constraints, c)
     end
     # Note: Tests for adding constraints to a grammar can be found in HerbConstraints.
