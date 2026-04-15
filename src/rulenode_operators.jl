@@ -169,9 +169,7 @@ end
 function _expr2rulenode(expr::Expr, grammar::AbstractGrammar, tags::AbstractDict)
     if expr.head == :call
         if !haskey(tags, expr)
-            @info expr.args
             parameters = [_expr2rulenode(expr.args[i], grammar, tags) for i in (2:length(expr.args))]
-            @info parameters
             pl = map(x -> x[1], parameters)
             pr = map(x -> x[2], parameters)
 
