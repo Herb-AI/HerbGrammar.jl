@@ -166,43 +166,87 @@ function grammar_map_right_to_left(grammar::AbstractGrammar)
     return tags
 end
 
+"""
+If the path from `source_type` to `target_type` within the grammar goes through multiple rules - recursively wrap them.
+"""
+function _wrap_rulenode_as(
+    target_type::Symbol, 
+    source_type::Symbol, 
+    node::RuleNode, 
+    grammar::AbstractGrammar, 
+    visited=Set{Symbol}()
+    )
+    if source_type == target_type
+        return node
+    elseif source_type in visited
+        return nothing
+    end
+
+    push!(visited, source_type)
+
+    for rule_idx in findall(==(source_type), grammar.rules)
+        wrapped_node = RuleNode(rule_idx, [node])
+        wrapped_type = grammar.types[rule_idx]
+        promoted = _wrap_rulenode_as(target_type, wrapped_type, wrapped_node, grammar, copy(visited))
+        if !isnothing(promoted)
+            return promoted
+        end
+    end
+
+    return nothing
+end
+
+"""
+Constructs a RuleNode matching expression 
+"""
+function _match_expr_rule(expr::Expr, parameters, grammar::AbstractGrammar)
+    expected_arity = length(parameters)
+
+    for (rule_idx, candidate) in pairs(grammar.rules)
+        # filter out rules that are not expressions
+        candidate isa Expr || continue
+        
+        # match the operation
+        expected_types = if expr.head == :call
+            # if it is a call - ensure that the operation matches.
+            candidate.args[1] == expr.args[1] || continue
+            candidate.args[2:end]
+        else
+            candidate.args
+        end
+        
+        # match arity
+        length(expected_types) == expected_arity || continue
+
+        children = RuleNode[]
+        matched = true
+
+        for ((source_type, child_node), expected_type) in zip(parameters, expected_types)
+            # the path from child type to the matched type might go through multiple intermediate nodes 
+            # wrap the child RuleNode
+            wrapped_child = _wrap_rulenode_as(expected_type, source_type, child_node, grammar)
+            if isnothing(wrapped_child)
+                # if wrapping failed - error later.
+                matched = false
+                break
+            end
+            push!(children, wrapped_child)
+        end
+
+        if matched
+            return (grammar.types[rule_idx], RuleNode(rule_idx, children))
+        end
+    end
+
+    error("Expression $(expr) cannot be represented in the grammar")
+end
+
 function _expr2rulenode(expr::Expr, grammar::AbstractGrammar, tags::AbstractDict)
     if expr.head == :call
         if !haskey(tags, expr)
-            parameters = [_expr2rulenode(expr.args[i], grammar, tags) for i in (2:length(expr.args))]
-            pl = map(x -> x[1], parameters)
-            pr = map(x -> x[2], parameters)
-
-            temp = [expr.args[1]; pl]
-            newexpr = Expr(:call, temp...)
-            rule = findfirst(==(newexpr), grammar.rules)
-
-
-            oldpl = copy(pl)
-            oldpr = copy(pr)
-            pnr = length(pl)
-
-            while isnothing(rule)
-
-                updatedrule = findfirst(==(pl[pnr]), grammar.rules)
-
-                if isnothing(updatedrule)
-                    pl[pnr] = oldpl[pnr]
-                    pr[pnr] = oldpr[pnr]
-                    pnr = pnr - 1
-                    continue
-                end
-
-                pl[pnr] = tags[pl[pnr]]
-                pr[pnr] = RuleNode(updatedrule, [pr[pnr]])
-
-                temp = [expr.args[1]; pl]
-                newexpr = Expr(:call, temp...)
-                rule = findfirst(==(newexpr), grammar.rules)
-
-                pnr = length(pl)
-            end
-            return (tags[newexpr], RuleNode(rule, pr))
+            # the expression may have some intermediate rules RuleNode representation -> need to search for the match
+            parameters = [_expr2rulenode(expr.args[i], grammar, tags) for i in 2:length(expr.args)]
+            return _match_expr_rule(expr, parameters, grammar)
         else
             rule = findfirst(==(expr), grammar.rules)
             return (tags[expr], RuleNode(rule, []))
@@ -210,41 +254,7 @@ function _expr2rulenode(expr::Expr, grammar::AbstractGrammar, tags::AbstractDict
     elseif expr.head == :block
         (l1, r1) = _expr2rulenode(expr.args[1], grammar, tags)
         (l2, r2) = _expr2rulenode(expr.args[3], grammar, tags)
-
-        temp = (l1, l2)
-
-        newexpr = Expr(:block, temp...)
-        rule = findfirst(==(newexpr), grammar.rules)
-
-        pl = [l1, l2]
-        pr = [r1, r2]
-
-        oldpl = copy(pl)
-        oldpr = copy(pr)
-        pnr = length(pl)
-
-        while isnothing(rule)
-
-            updatedrule = findfirst(==(pl[pnr]), grammar.rules)
-
-            if isnothing(updatedrule)
-                pl[pnr] = oldpl[pnr]
-                pr[pnr] = oldpr[pnr]
-                pnr = pnr - 1
-                continue
-            end
-
-            pl[pnr] = tags[pl[pnr]]
-            pr[pnr] = RuleNode(updatedrule, [pr[pnr]])
-
-            temp = (pl[1], pl[2])
-            newexpr = Expr(:block, temp...)
-            rule = findfirst(==(newexpr), grammar.rules)
-
-            pnr = length(pl)
-        end
-        return (tags[newexpr], RuleNode(rule, pr))
-
+        return _match_expr_rule(expr, [(l1, r1), (l2, r2)], grammar)
     elseif expr.head == :quote
         return _expr2rulenode(expr.args[1], grammar, tags)
     else
@@ -303,7 +313,7 @@ Converts an expression into a [`AbstractRuleNode`](@ref) corresponding to the ru
 """
 function expr2rulenode(expr::Symbol, grammar::AbstractGrammar, startSymbol::Symbol)
     tags = grammar_map_right_to_left(grammar)
-    (s, rn) = expr2rulenode(expr, grammar, tags)
+    (s, rn) = _expr2rulenode(expr, grammar, tags)
     while s != startSymbol
 
         updatedrule = findfirst(==(s), grammar.rules)
