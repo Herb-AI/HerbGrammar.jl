@@ -50,6 +50,12 @@ ContextSensitiveGrammar(
 
 ContextSensitiveGrammar() = ContextSensitiveGrammar([], [], BitVector[], BitVector[], Dict{Symbol,Vector{Int}}(), Dict{Symbol,BitVector}(), Vector{Vector{Symbol}}(), Vector{BitVector}(), nothing, AbstractConstraint[])
 
+Base.broadcastable(g::ContextSensitiveGrammar) = Ref(g)
+get_rules(g::ContextSensitiveGrammar) = g.rules
+get_arity(g::ContextSensitiveGrammar) = length.(g.childtypes)
+get_arity(g::ContextSensitiveGrammar, r) = length(g.childtypes[r])
+get_arity(g::ContextSensitiveGrammar, domain::BitVector) = get_arity.(g, findall(domain))
+
 """
 	expr2csgrammar(ex::Expr)::ContextSensitiveGrammar
 

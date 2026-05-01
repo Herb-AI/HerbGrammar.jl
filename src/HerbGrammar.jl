@@ -15,14 +15,12 @@ include("rulenode_operators.jl")
 
 include("grammar_io.jl")
 
-export 
+export
     ContextSensitiveGrammar,
     AbstractRuleNode,
     RuleNode,
     Hole,
-    NodeLoc,
-
-    @cfgrammar,
+    NodeLoc, @cfgrammar,
     max_arity,
     isterminal,
     iseval,
@@ -34,35 +32,22 @@ export
     contains_returntype,
     nchildren,
     child_types,
-    get_domain,
     get_childtypes,
     nonterminals,
     iscomplete,
     parse_rule!,
-    rulesoftype,
-
-    @csgrammar,
+    rulesoftype, @csgrammar,
     expr2csgrammar,
     clearconstraints!,
     addconstraint!,
     merge_grammars!,
-    expr2rulenode,
-
-    @pcfgrammar,
-
-    @pcsgrammar,
+    expr2rulenode, @pcfgrammar, @pcsgrammar,
     expr2pcsgrammar,
     normalize!,
-    init_probabilities!,
-
-    SymbolTable,
-    grammar2symboltable,
-    
-    rulenode2expr,
+    init_probabilities!, SymbolTable,
+    grammar2symboltable, rulenode2expr,
     rulenode_log_probability,
-    max_rulenode_log_probability,
-
-    mindepth_map,
+    max_rulenode_log_probability, mindepth_map,
     mindepth,
     containedin,
     subsequenceof,
@@ -71,6 +56,8 @@ export
     read_pcsg,
     add_rule!,
     remove_rule!,
-    cleanup_removed_rules!
+    cleanup_removed_rules!,
+    get_rules,
+    get_arity
 
 end # module HerbGrammar

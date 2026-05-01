@@ -80,7 +80,7 @@ rules in the grammar. Bit `i` is set to `true` iff rule `i` is of type `type`.
     Since this function can be intensively used when exploring a program space defined by a grammar,
     the outcomes of this function are precomputed and stored in the `domains` field in a [`AbstractGrammar`](@ref).
 """
-get_domain(g::AbstractGrammar, type::Symbol)::BitVector = deepcopy(g.domains[type])
+HerbCore.get_domain(g::AbstractGrammar, type::Symbol)::BitVector = deepcopy(g.domains[type])
 
 
 """
@@ -88,7 +88,7 @@ get_domain(g::AbstractGrammar, type::Symbol)::BitVector = deepcopy(g.domains[typ
 
 Takes a domain `rules` defined as a vector of ints and converts it to a domain defined as a `BitVector`.
 """
-get_domain(g::AbstractGrammar, rules::Vector{Int})::BitVector = BitArray(r ∈ rules for r ∈ 1:length(g.rules))
+HerbCore.get_domain(g::AbstractGrammar, rules::Vector{Int})::BitVector = BitArray(r ∈ rules for r ∈ 1:length(g.rules))
 
 
 """
