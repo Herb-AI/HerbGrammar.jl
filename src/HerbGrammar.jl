@@ -14,6 +14,7 @@ include("csg/probabilistic_csg.jl")
 include("rulenode_operators.jl")
 
 include("grammar_io.jl")
+include("next.jl")
 
 export 
     ContextSensitiveGrammar,
