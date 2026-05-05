@@ -1,9 +1,9 @@
 module Next
 using HerbCore: AbstractGrammar, AbstractRuleNode
 import HerbCore.Next as HerbCore
-using .HerbCore: AbstractRule, get_nonterminal_symbols, get_terminal_symbols, get_lhs, get_rhs, get_rules
+using .HerbCore: AbstractProductionRule, get_nonterminal_symbols, get_terminal_symbols, get_lhs, get_rhs, get_rules
 
-struct Grammar{R<:AbstractRule} <: AbstractGrammar
+struct Grammar{R<:AbstractProductionRule} <: AbstractGrammar
     nonterminals::Vector{Symbol}
     terminals::Vector{Symbol}
     rules::Vector{R}
@@ -29,9 +29,9 @@ HerbCore.get_nonterminal_symbols(g::Grammar) = g.nonterminals
 HerbCore.get_terminal_symbols(g::Grammar) = g.terminals
 HerbCore.get_rules(g::Grammar) = g.rules
 
-get_rule(r::AbstractRule) = r.rule
+get_rule(r::AbstractProductionRule) = r.rule
 
-struct Rule{N} <: AbstractRule
+struct Rule{N} <: AbstractProductionRule
     lhs::Symbol
     rhs::NTuple{N,Symbol}
 end
@@ -52,14 +52,14 @@ function Base.isless(a::Rule, b::Rule)
     end
 end
 
-struct Context{P<:AbstractRuleNode,R<:AbstractRule} <: AbstractRule
+struct Context{P<:AbstractRuleNode,R<:AbstractProductionRule} <: AbstractProductionRule
     α::P
     rule::R
     β::P
 end
 
 """
-    get_context(rule::AbstractRule)
+    get_context(rule::AbstractProductionRule)
 
 Get the context of the rule.
 """
@@ -68,13 +68,13 @@ get_context(cr::Context) = (; α = cr.α, β = cr.β)
 HerbCore.get_lhs(cr::Context) = contextualize(cr.α, get_lhs(get_rule(cr)), cr.β) 
 HerbCore.get_rhs(cr::Context) = contextualize(cr.α, get_rhs(get_rule(cr)), cr.β)
 
-struct Attribute{A,R} <: AbstractRule
+struct Attribute{A,R} <: AbstractProductionRule
     rule::R
     attributes::A
 end
 
 """
-    get_attributes(rule::AbstractRule)
+    get_attributes(rule::AbstractProductionRule)
 
 Get the attribute(s) of the `rule`.
 """
@@ -84,4 +84,23 @@ get_attributes(cr::Context{<:AbstractRuleNode, <:Attribute}) = get_attributes(cr
 HerbCore.get_lhs(ar::Attribute) = get_lhs(ar.rule)
 HerbCore.get_rhs(ar::Attribute) = get_rhs(ar.rule)
 get_context(ar::Attribute{<:Any,<:Context}) = get_context(ar.rule)
+
+abstract type DerivationHeuristicStyle end
+struct Forward <: DerivationHeuristicStyle end
+struct Random <: DerivationHeuristicStyle end
+struct MLFS <: DerivationHeuristicStyle end
+
+function derivation_heuristic(::Forward, ::AbstractGrammar, indices)
+    return view(indices, sort(indices))
+end
+
+function derivation_heuristic(::Random, ::AbstractGrammar, indices)
+    return view(indices, randperm(length(indices)))
+end
+
+function derivation_heuristic(::MLFS, grammar::AbstractGrammar, indices)
+    log_probs = get_log_probabilities(grammar)
+    # have highest log_probability first
+    return view(indices, sort(indices; by=i -> log_probs[i], rev=true)) 
+end
 end
