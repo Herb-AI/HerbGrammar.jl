@@ -208,7 +208,9 @@ end
 """
     add_rule!(g::AbstractGrammar, p::Real, e::Expr)
 
-Adds a probabilistic derivation rule.
+Add a probabilistic derivation rule.
+
+Normalizes the grammar `g`'s probabilities after adding the rule(s).
 """
 function add_rule!(g::AbstractGrammar, p::Real, e::Expr)
     isprobabilistic(g) || throw(ArgumentError("adding a probabilistic rule to a non-probabilistic grammar"))
