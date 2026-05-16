@@ -103,3 +103,42 @@ end
     end
     @test expr2rulenode(:(at_cvc(_arg_1, 1)), grammar_11440431) == @rulenode 9{2,13}
 end
+
+
+@testitem "convert expr with multiple intermediate rules and multiple same types on rhs." begin
+    using HerbCore: @rulenode
+    @testset "Multiple similar types on RHS" begin
+    g = @csgrammar begin
+            S = A - B
+            S = A + B
+            S = f(A, B)
+            A = V
+            B = V
+            V = 1
+            V = 2
+        end
+        e1 = :(1-1)
+        @test expr2rulenode(e1, g) == @rulenode 1{4{6}, 5{6}}
+        @test rulenode2expr(expr2rulenode(e1, g), g) == e1
+        e2 = :(1+1)
+        @test expr2rulenode(e2, g) == @rulenode 2{4{6}, 5{6}}
+        @test rulenode2expr(expr2rulenode(e2, g), g) == e2
+        e3 = :(f(1, 1))
+        @test expr2rulenode(e3, g) == @rulenode 3{4{6}, 5{6}}
+        @test rulenode2expr(expr2rulenode(e3, g), g) == e3
+
+        @test_throws ErrorException expr2rulenode(:((1 + 1) + 1), g)
+    end
+    @testset "Nested types" begin
+        g = @csgrammar begin
+            S = A - D
+            A = B
+            B = C
+            C = 1
+            D = 3
+        end
+        @test expr2rulenode(:(1-3), g) == @rulenode 1{2{3{4}}, 5}
+        @test rulenode2expr(expr2rulenode(:((1)-3), g), g) == :(1 - 3)
+    end
+
+end
