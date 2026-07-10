@@ -6,8 +6,8 @@ In other words, this function finds the depths of the lowest trees that can be m
 using each of the available production rules as a root.
 """
 function mindepth_map(grammar::AbstractGrammar)
-    dmap0 = Int[isterminal(grammar,i) ? 1 : typemax(Int)/2 for i in eachindex(grammar.rules)]
-    dmap1 = fill(-1, length(grammar.rules)) 
+    dmap0 = Int[isterminal(grammar, i) ? 1 : typemax(Int)/2 for i in eachindex(grammar.rules)]
+    dmap1 = fill(-1, length(grammar.rules))
     while dmap0 != dmap1
         for i in eachindex(grammar.rules)
             dmap1[i] = _mindepth(grammar, i, dmap0)
@@ -46,13 +46,17 @@ const SymbolTable = Dict{Symbol,Any}
 """
     grammar2symboltable(grammar::AbstractGrammar, mod::Module=Main)
 
-Returns a [`SymbolTable`](@ref) populated with a mapping from symbols in the 
-[`AbstractGrammar`](@ref) to symbols in module `mod` or `Main`, if defined.
+Returns a [`SymbolTable`](@ref) populated with a mapping from symbols in the
+rules and semantic specifications of an [`AbstractGrammar`](@ref) to symbols
+in module `mod` or `Main`, if defined.
 """
 function grammar2symboltable(grammar::AbstractGrammar, mod::Module=Main)
     tab = SymbolTable()
     for rule in grammar.rules
         _add_to_symboltable!(tab, rule, mod)
+    end
+    for specification in grammar.specification, semantic in specification
+        _add_to_symboltable!(tab, semantic, mod; check_eval_rule=false)
     end
     tab
 end
@@ -61,17 +65,16 @@ end
 # the `treat_as_own` option in `test/runtests.jl` 
 @deprecate SymbolTable(g::AbstractGrammar, m::Module) grammar2symboltable(g, m)
 
-_add_to_symboltable!(tab::SymbolTable, rule::Any, mod::Module) = true
+_add_to_symboltable!(tab::SymbolTable, rule::Any, mod::Module; check_eval_rule::Bool=true) = true
 
-
-function _add_to_symboltable!(tab::SymbolTable, rule::Expr, mod::Module)
-    if rule.head == :call && !iseval(rule)
+function _add_to_symboltable!(tab::SymbolTable, rule::Expr, mod::Module; check_eval_rule::Bool=true)
+    if rule.head == :call && (!check_eval_rule || !iseval(rule))
         s = rule.args[1]
         if !_add_to_symboltable!(tab, s, mod)
-            @warn "Unable to add function $s to symbol table"  
+            @warn "Unable to add function $s to symbol table"
         end
         for s in rule.args[2:end]  #nested exprs
-            _add_to_symboltable!(tab, s, mod)
+            _add_to_symboltable!(tab, s, mod; check_eval_rule=check_eval_rule)
         end
     end
     return true
@@ -110,7 +113,7 @@ function containedin(vec1::Vector, vec2::Vector)
         if vec1_index > max_elements
             return true
         end
-        
+
         if item == vec1[vec1_index]
             vec1_index += 1  # increase the index every time we encounter the matching element
         end
@@ -134,7 +137,7 @@ function subsequenceof(vec1::Vector{Int}, vec2::Vector{Int})
         vec2_elem = vec2[vec2_index]
         vec1_elem = get(vec1, vec1_index, nothing)
 
-        if vec1_elem === nothing 
+        if vec1_elem === nothing
             break
         end
 
@@ -145,7 +148,7 @@ function subsequenceof(vec1::Vector{Int}, vec2::Vector{Int})
 
         vec2_index += 1
     end
-    
+
     return get(vec1, vec1_index, nothing) === nothing
 
 end
